@@ -5,6 +5,8 @@ import PopularVenues from "./PopularVenues";
 import HeroSection from "./HeroSection";
 import { venueService, imageService } from "../../services/api";
 import "../../styles/VenuePage.css";
+import { useNavigate } from "react-router-dom";
+
 
 export default function VenuePage() {
   const [venues, setVenues] = useState([]);
@@ -17,6 +19,8 @@ export default function VenuePage() {
     spacePreference: '',
     rating: ''
   });
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     let isMounted = true;  // to prevent state update if unmounted
@@ -205,31 +209,37 @@ export default function VenuePage() {
           <div className="venue-grid">
             {filteredVenues.map((venue, index) => (
               <div key={venue.venue_id || index} className="venue-card">
-                <div className="image-container">
-                  <img
-                    src={venue.image || `https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80`}
-                    alt={venue.venueName || "Venue"}
-                    className="venue-image"
-                  />
-                  <div className="explore-overlay">Explore</div>
-                </div>
-                <div className="venue-content">
-                  <h3 className="venue-title">{venue.venueName || "Grand Ballroom"}</h3>
-                  <p className="venue-location">{venue.location || "Kathmandu, Nepal"}</p>
-                  <div className="venue-details">
-                    <span className="capacity-icon">👥</span>
-                    <span>Capacity: {venue.capacity || "500"} people</span>
-                  </div>
-                  <div className="price-row">
-                    <span className="price">
-                      NPR {venue.price || "15,000"}
-                      <span className="price-unit">/hour</span>
-                    </span>
-                  </div>
-                  <div className="stars">★★★★★</div>
-                  <button className="view-details-button">View Details</button>
-                </div>
+              <div className="image-container">
+                <img
+                  src={venue.image || "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80"}
+                  alt={venue.venueName || "Venue"}
+                  className="venue-image"
+                />
+                <div className="explore-overlay">Explore</div>
               </div>
+              <div className="venue-content">
+                <h3 className="venue-title">{venue.venueName || "Grand Ballroom"}</h3>
+                <p className="venue-location">{venue.location || "Kathmandu, Nepal"}</p>
+                <div className="venue-details">
+                  <span className="capacity-icon">👥</span>
+                  <span>Capacity: {venue.capacity || "500"} people</span>
+                </div>
+                <div className="price-row">
+                  <span className="price">
+                    NPR {venue.price || "15,000"}
+                    <span className="price-unit">/hour</span>
+                  </span>
+                </div>
+                <div className="stars">★★★★★</div>
+                <button
+                  className="view-details-button"
+                  onClick={() => navigate(`/venues/${venue.venue_id}`)}
+                >
+                  View Details
+                </button>
+              </div>
+            </div>
+            
             ))}
           </div>
         )}

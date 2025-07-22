@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import "../../styles/VenueGrid.css";
 
 const VenueGrid = ({
@@ -12,6 +13,8 @@ const VenueGrid = ({
   onPageChange,
   venueType = "default",
 }) => {
+  const navigate = useNavigate();
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -39,7 +42,7 @@ const VenueGrid = ({
     },
   };
 
-  // Calculate pagination
+  // Pagination logic
   const venuesPerPage = 4;
   const dynamicTotalPages = venues.length <= venuesPerPage ? 1 : Math.ceil(venues.length / venuesPerPage);
   const startIdx = (currentPage - 1) * venuesPerPage;
@@ -67,8 +70,13 @@ const VenueGrid = ({
             className={`venue-card${venueType === "popular" ? " popular" : ""}`}
             variants={cardVariants}
             whileHover="hover"
+            onClick={() => navigate(`/venues/${venue.id}`)} // <-- navigate on card click
+            style={{ cursor: 'pointer' }} // indicate clickable
           >
-            <div className="venue-image" style={{ backgroundImage: `url(${venue.image})` }}>
+            <div
+              className="venue-image"
+              style={{ backgroundImage: `url(${venue.image})` }}
+            >
               {venueType === "popular" && (
                 <div className="venue-explore-overlay">
                   <span>Explore</span>
