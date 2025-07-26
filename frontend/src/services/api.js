@@ -81,7 +81,7 @@ return response.data;
   },
 
   resetPassword: async (token, password) => {
-    const response = await api.post("/auth/reset-password", { token, password });
+    const response = await api.post("/auth/reset-password", { otpCode: token, password });
     return response.data;
   },
   isAuthenticated: () => !!localStorage.getItem("jwtToken"),

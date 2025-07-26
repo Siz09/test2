@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Lock, AlertCircle, CheckCircle, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthCard from "./auth-card";
@@ -29,16 +29,18 @@ const buttonVariants = {
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
-  const { token } = useParams();
   const [formData, setFormData] = useState({
+    otpCode: "",
     password: "",
     confirmPassword: "",
   });
   const [errors, setErrors] = useState({
+    otpCode: "",
     password: "",
     confirmPassword: "",
   });
   const [touched, setTouched] = useState({
+    otpCode: false,
     password: false,
     confirmPassword: false,
   });
@@ -47,20 +49,23 @@ export default function ResetPasswordPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [apiError, setApiError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [tokenValid, setTokenValid] = useState(true);
 
-  // Check if token exists
-  useEffect(() => {
-    if (!token) {
-      setTokenValid(false);
-      setApiError("Invalid or missing reset token. Please request a new password reset.");
-    }
-  }, [token]);
 
   // Define validateForm as a useCallback to avoid dependency issues
   const validateForm = useCallback(() => {
     const newErrors = {};
     let isValid = true;
+
+    // OTP Code validation
+    if (!formData.otpCode) {
+      newErrors.otpCode = "OTP code is required";
+      isValid = false;
+    } else if (!/^\d{6}$/.test(formData.otpCode)) {
+      newErrors.otpCode = "OTP code must be exactly 6 digits";
+      isValid = false;
+    } else {
+      newErrors.otpCode = "";
+    }
 
     // Password validation
     if (!formData.password) {
@@ -95,6 +100,20 @@ export default function ResetPasswordPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // For OTP code, only allow numeric input and limit to 6 digits
+    if (name === "otpCode") {
+      const numericValue = value.replace(/\D/g, "").slice(0, 6);
+      setFormData({
+        ...formData,
+        [name]: numericValue,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
     setFormData({
       ...formData,
       [name]: value,
@@ -118,22 +137,22 @@ export default function ResetPasswordPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setTouched({ password: true, confirmPassword: true });
+    setTouched({ otpCode: true, password: true, confirmPassword: true });
 
-    if (!validateForm() || !tokenValid) return;
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
     setApiError("");
     setSuccessMessage("");
 
     try {
-      await authService.resetPassword(token, formData.password);
+      await authService.resetPassword(formData.otpCode, formData.password);
       
       setSuccessMessage("Your password has been successfully reset! Redirecting to login...");
       
       // Clear the form
-      setFormData({ password: "", confirmPassword: "" });
-      setTouched({ password: false, confirmPassword: false });
+      setFormData({ otpCode: "", password: "", confirmPassword: "" });
+      setTouched({ otpCode: false, password: false, confirmPassword: false });
       
       // Redirect to login after 3 seconds
       setTimeout(() => {
@@ -145,11 +164,9 @@ export default function ResetPasswordPage() {
       
       if (error.response) {
         if (error.response.status === 400) {
-          setApiError("Invalid or expired reset token. Please request a new password reset.");
-          setTokenValid(false);
+          setApiError("Invalid or expired OTP code. Please request a new password reset.");
         } else if (error.response.status === 404) {
-          setApiError("Reset token not found. Please request a new password reset.");
-          setTokenValid(false);
+          setApiError("OTP code not found. Please request a new password reset.");
         } else if (error.response.data?.message) {
           setApiError(error.response.data.message);
         } else {
@@ -171,52 +188,6 @@ export default function ResetPasswordPage() {
     navigate("/forgot-password");
   };
 
-  if (!tokenValid) {
-    return (
-      <AuthCard
-        title="Invalid Reset Link"
-        imageSrc="https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-        imageAlt="Invalid reset link illustration"
-        imagePosition="left"
-      >
-        <div className="error-state">
-          <motion.div
-            className="error-banner"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <AlertCircle size={16} />
-            <span>{apiError}</span>
-          </motion.div>
-
-          <div className="error-actions">
-            <motion.button
-              className="auth-button primary-button"
-              onClick={handleRequestNewReset}
-              variants={buttonVariants}
-              initial="idle"
-              whileHover="hover"
-              whileTap="tap"
-            >
-              Request New Reset Link
-            </motion.button>
-
-            <motion.button
-              type="button"
-              className="back-to-login-button"
-              onClick={handleBackToLogin}
-              whileHover={{ x: -3 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              <ArrowLeft size={16} />
-              Back to Login
-            </motion.button>
-          </div>
-        </div>
-      </AuthCard>
-    );
-  }
 
   return (
     <AuthCard
@@ -262,6 +233,62 @@ export default function ResetPasswordPage() {
           initial="hidden"
           animate="visible"
           custom={1}
+        >
+          <label htmlFor="otpCode" className={touched.otpCode && errors.otpCode ? "text-error" : ""}>
+            OTP Code <span className="required">*</span>
+          </label>
+          <div className={`input-container ${touched.otpCode && errors.otpCode ? "input-error" : ""}`}>
+            <motion.input
+              whileFocus={{ scale: 1.01 }}
+              transition={{ duration: 0.2 }}
+              type="text"
+              id="otpCode"
+              name="otpCode"
+              placeholder="Enter 6-digit OTP code"
+              value={formData.otpCode}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className={touched.otpCode && !errors.otpCode ? "input-valid" : ""}
+              required
+              disabled={isSubmitting}
+              maxLength="6"
+              inputMode="numeric"
+              pattern="[0-9]*"
+            />
+            <Lock className="input-icon" size={20} />
+            <AnimatePresence>
+              {touched.otpCode && !errors.otpCode && formData.otpCode && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <CheckCircle className="valid-icon" size={16} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          <AnimatePresence>
+            {touched.otpCode && errors.otpCode && (
+              <motion.p
+                className="error-message"
+                initial={{ opacity: 0, y: -10, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: "auto" }}
+                exit={{ opacity: 0, y: -10, height: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {errors.otpCode}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </motion.div>
+        <motion.div
+          className="form-group"
+          variants={formControlVariants}
+          initial="hidden"
+          animate="visible"
+          custom={2}
         >
           <label htmlFor="password" className={touched.password && errors.password ? "text-error" : ""}>
             New Password <span className="required">*</span>
@@ -322,7 +349,7 @@ export default function ResetPasswordPage() {
           variants={formControlVariants}
           initial="hidden"
           animate="visible"
-          custom={2}
+          custom={3}
         >
           <label htmlFor="confirmPassword" className={touched.confirmPassword && errors.confirmPassword ? "text-error" : ""}>
             Confirm New Password <span className="required">*</span>
@@ -383,22 +410,22 @@ export default function ResetPasswordPage() {
           variants={formControlVariants}
           initial="hidden"
           animate="visible"
-          custom={3}
+          custom={4}
         >
           <p className="form-help-text">
-            Your password must be at least 8 characters long and contain a mix of letters, numbers, and symbols for better security.
+            Enter the 6-digit OTP code sent to your email along with your new password. Your password must be at least 8 characters long.
           </p>
         </motion.div>
 
         <motion.button
           className={`auth-button primary-button ${isSubmitting ? "button-loading" : ""}`}
           type="submit"
-          disabled={isSubmitting || !formData.password || !formData.confirmPassword}
+          disabled={isSubmitting || !formData.otpCode || !formData.password || !formData.confirmPassword}
           variants={buttonVariants}
           initial="idle"
           whileHover="hover"
           whileTap="tap"
-          custom={4}
+          custom={5}
         >
           {isSubmitting ? "Updating Password..." : "Update Password"}
         </motion.button>
@@ -408,7 +435,7 @@ export default function ResetPasswordPage() {
           variants={formControlVariants}
           initial="hidden"
           animate="visible"
-          custom={5}
+          custom={6}
         >
           <motion.button
             type="button"
@@ -419,6 +446,16 @@ export default function ResetPasswordPage() {
           >
             <ArrowLeft size={16} />
             Back to Login
+          </motion.button>
+          
+          <motion.button
+            type="button"
+            className="back-to-login-button"
+            onClick={handleRequestNewReset}
+            whileHover={{ x: 3 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            Request New OTP
           </motion.button>
         </motion.div>
       </form>
