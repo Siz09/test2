@@ -471,6 +471,26 @@ const VenueAddTest = () => {
     bookings: '',
     status: '',
     imageUrl:'',
+    venueTypevz:'',
+    fullAddress:'',
+    city:'',
+    district:'',
+    province:'',
+    mapLocation:'',    // lat/long or map URL
+    capacity:'',
+    pricePerHour:'',
+    minBookingHours:'',
+    openingTime:'',
+    closingTime:'',
+    amenities: [],      // e.g. ["WiFi","Parking"]
+    contactPhone:'',
+    contactEmail:'',
+    mainPhoto:'',
+    additionalPhotos:'',
+    floorPlan:'',
+    description:'',
+    terms:'',
+    agree:'',  // must be true     
   });
 
   const [errors, setErrors] = useState({});
@@ -540,13 +560,33 @@ const VenueAddTest = () => {
       alert('Venue added successfully!');
       setFormData({
         venueName: '',
-        partnerId: '',
-        location: '',
-        capacity: '',
-        price: '',
-        bookings: '',
-        status: '',
-        imageUrl:'',
+    partnerId: '',  // Keep as string to match <select> value
+    location: '',
+    capacity: '',
+    price: '',
+    bookings: '',
+    status: '',
+    imageUrl:'',
+    venueTypevz:'',
+    fullAddress:'',
+    city:'',
+    district:'',
+    province:'',
+    mapLocation:'',    // lat/long or map URL
+    capacity:'',
+    pricePerHour:'',
+    minBookingHours:'',
+    openingTime:'',
+    closingTime:'',
+    amenities: [],      // e.g. ["WiFi","Parking"]
+    contactPhone:'',
+    contactEmail:'',
+    mainPhoto:'',
+    additionalPhotos:'',
+    floorPlan:'',
+    description:'',
+    terms:'',
+    agree:'',  // must be true   
       });
 
       navigate('/admin/venues');

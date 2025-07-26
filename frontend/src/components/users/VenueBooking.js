@@ -5,119 +5,80 @@ import { bookingService } from "../../services/api"
 import "../../styles/venue-booking.css"
 import "../../styles/modern-components.css"
 import Header from "./Header"
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const VenueBooking = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
+  const { state } = useLocation();
+  const { venueId, venueName, venueImage } = state || {};
+
   const [formData, setFormData] = useState({
-    venueName: "Grand Ballroom",
-    date: "",
-    startTime: "",
-    duration: "4",
-    guests: "",
-    specialRequests: ""
+    date: '',
+    startTime: '',
+    duration: '4',
+    guests: '',
+    specialRequests: '',
   });
   const [formErrors, setFormErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState(null);
 
-  const validateForm = () => {
-    const errors = {};
-    
-    if (!formData.date) {
-      errors.date = "Please select a date";
-    } else {
-      const selectedDate = new Date(formData.date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      if (selectedDate < today) {
-        errors.date = "Please select a future date";
-      }
-    }
-    
-    if (!formData.startTime) {
-      errors.startTime = "Please select a start time";
-    }
-    
-    if (!formData.guests || parseInt(formData.guests) < 1) {
-      errors.guests = "Please enter number of guests";
-    } else if (parseInt(formData.guests) > 1000) {
-      errors.guests = "Maximum capacity is 1000 guests";
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+  useEffect(() => {
+    if (!venueId) navigate('/venues');
+  }, [venueId, navigate]);
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-
-    // Clear error when user starts typing
+    setFormData(prev => ({ ...prev, [field]: value }));
     if (formErrors[field]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [field]: ""
-      }));
+      setFormErrors(prev => ({ ...prev, [field]: '' }));
     }
+  };
+
+  const validateForm = () => {
+    const errs = {};
+    if (!formData.date) errs.date = 'Please select a date';
+    else {
+      const sel = new Date(formData.date);
+      const today = new Date(); today.setHours(0,0,0,0);
+      if (sel < today) errs.date = 'Please select a future date';
+    }
+    if (!formData.startTime) errs.startTime = 'Please select a start time';
+    const g = parseInt(formData.guests, 10);
+    if (!g || g < 1) errs.guests = 'Please enter number of guests';
+    else if (g > 1000) errs.guests = 'Maximum 1000 guests';
+    setFormErrors(errs);
+    return !Object.keys(errs).length;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
     setError(null);
+    const bookedTime = `${formData.date}T${formData.startTime}:00`;
 
     try {
-      const bookingData = {
-        venueName: formData.venueName,
-        eventDate: formData.date,
-        startTime: formData.startTime,
-        duration: parseInt(formData.duration),
-        numberOfGuests: parseInt(formData.guests),
-        specialRequests: formData.specialRequests || "",
-        status: "pending"
-      };
-
-      console.log("Submitting booking:", bookingData);
-      const response = await bookingService.createBooking(bookingData);
-      console.log("Booking created successfully:", response);
-      
-      setSuccess(true);
-      setFormData({
-        venueName: "Grand Ballroom",
-        date: "",
-        startTime: "",
-        duration: "4",
-        guests: "",
-        specialRequests: ""
+      await bookingService.createBooking({
+        venueId,
+        bookedTime,
+        duration: parseInt(formData.duration, 10),
+        numberOfGuests: parseInt(formData.guests, 10),
+        specialRequests: formData.specialRequests.trim(),
+        status: 'pending',
       });
-      
-      // Show success message for 3 seconds
-      setTimeout(() => {
-        setSuccess(false);
-      }, 3000);
-
-    } catch (error) {
-      console.error("Booking submission failed:", error);
-      if (error.response?.status === 401) {
-        setError("Please log in to make a booking.");
-      } else if (error.response?.data?.message) {
-        setError(error.response.data.message);
-      } else {
-        setError("Failed to submit booking. Please try again.");
-      }
+      setSuccess(true);
+      setFormData({ date: '', startTime: '', duration: '4', guests: '', specialRequests: '' });
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Booking failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  
   return (
     <div className="venue-booking-page">
       <Header />
@@ -142,7 +103,8 @@ const VenueBooking = () => {
         <div className="venue-content-grid">
           {/* Venue Details */}
           <div className="venue-details-section">
-            <h2 className="venue-details-title">Grand Ballroom</h2>
+            <h2 className="venue-details-title">{venueName}</h2>
+          
             
             {/* Image Carousel */}
             <div className="venue-image-carousel">
@@ -215,124 +177,112 @@ const VenueBooking = () => {
                 <p className="venue-booking-subtitle">Fill in the details below</p>
               </div>
 
-              {/* Success Message */}
               {success && (
-                <div style={{
-                  background: '#d4edda',
-                  color: '#155724',
-                  padding: '12px',
-                  margin: '16px',
-                  borderRadius: '4px',
-                  border: '1px solid #c3e6cb'
-                }}>
-                  ✅ Booking submitted successfully! We'll contact you soon.
-                </div>
-              )}
+                  <div style={{
+                    background: '#d4edda',
+                    color: '#155724',
+                    padding: '12px',
+                    margin: '16px',
+                    borderRadius: '4px',
+                    border: '1px solid #c3e6cb'
+                  }}>
+                    ✅ Booking submitted successfully! We'll contact you soon.
+                  </div>
+                )}
 
-              {/* Error Message */}
-              {error && (
-                <div style={{
-                  background: '#f8d7da',
-                  color: '#721c24',
-                  padding: '12px',
-                  margin: '16px',
-                  borderRadius: '4px',
-                  border: '1px solid #f5c6cb'
-                }}>
-                  ❌ {error}
-                </div>
-              )}
+                {error && (
+                  <div style={{
+                    background: '#f8d7da',
+                    color: '#721c24',
+                    padding: '12px',
+                    margin: '16px',
+                    borderRadius: '4px',
+                    border: '1px solid #f5c6cb'
+                  }}>
+                    ❌ {error}
+                  </div>
+                )}
+                
+                <form className="venue-booking-form" onSubmit={handleSubmit}>
+                  <div className="venue-form-group">
+                    <label className="venue-form-label">Event Date *</label>
+                    <input
+                      type="date"
+                      className={`venue-form-input ${formErrors.date ? 'venue-input-error' : ''}`}
+                      value={formData.date}
+                      onChange={e => handleInputChange('date', e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                    {formErrors.date && (
+                      <div className="venue-form-error">{formErrors.date}</div>
+                    )}
+                  </div>
 
-              <form className="venue-booking-form" onSubmit={handleSubmit}>
-                <div className="venue-form-group">
-                  <label className="venue-form-label">Event Date *</label>
-                  <input
-                    type="date"
-                    className={`venue-form-input ${formErrors.date ? 'venue-input-error' : ''}`}
-                    value={formData.date}
-                    onChange={(e) => handleInputChange('date', e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                  {formErrors.date && (
-                    <div className="venue-form-error">{formErrors.date}</div>
-                  )}
-                </div>
+                  <div className="venue-form-group">
+                    <label className="venue-form-label">Start Time *</label>
+                    <select
+                      className={`venue-form-input ${formErrors.startTime ? 'venue-input-error' : ''}`}
+                      value={formData.startTime}
+                      onChange={e => handleInputChange('startTime', e.target.value)}
+                    >
+                      <option value="">Select time</option>
+                      {['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00']
+                        .map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    {formErrors.startTime && (
+                      <div className="venue-form-error">{formErrors.startTime}</div>
+                    )}
+                  </div>
 
-                <div className="venue-form-group">
-                  <label className="venue-form-label">Start Time *</label>
-                  <select
-                    className={`venue-form-input ${formErrors.startTime ? 'venue-input-error' : ''}`}
-                    value={formData.startTime}
-                    onChange={(e) => handleInputChange('startTime', e.target.value)}
+                  <div className="venue-form-group">
+                    <label className="venue-form-label">Duration</label>
+                    <select
+                      className="venue-form-input"
+                      value={formData.duration}
+                      onChange={e => handleInputChange('duration', e.target.value)}
+                    >
+                      <option value="2">2 hours</option>
+                      <option value="4">4 hours</option>
+                      <option value="6">6 hours</option>
+                      <option value="8">8 hours</option>
+                      <option value="12">12 hours</option>
+                    </select>
+                  </div>
+
+                  <div className="venue-form-group">
+                    <label className="venue-form-label">Number of Guests *</label>
+                    <input
+                      type="number"
+                      className={`venue-form-input ${formErrors.guests ? 'venue-input-error' : ''}`}
+                      placeholder="Enter number of guests"
+                      value={formData.guests}
+                      onChange={e => handleInputChange('guests', e.target.value)}
+                      min="1"
+                      max="1000"
+                    />
+                    {formErrors.guests && (
+                      <div className="venue-form-error">{formErrors.guests}</div>
+                    )}
+                  </div>
+
+                  <div className="venue-form-group">
+                    <label className="venue-form-label">Special Requests</label>
+                    <textarea
+                      className="venue-form-textarea"
+                      placeholder="Any special requirements or requests..."
+                      value={formData.specialRequests}
+                      onChange={e => handleInputChange('specialRequests', e.target.value)}
+                      rows="3"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="venue-continue-btn"
+                    disabled={loading}
                   >
-                    <option value="">Select time</option>
-                    <option value="09:00">9:00 AM</option>
-                    <option value="10:00">10:00 AM</option>
-                    <option value="11:00">11:00 AM</option>
-                    <option value="12:00">12:00 PM</option>
-                    <option value="13:00">1:00 PM</option>
-                    <option value="14:00">2:00 PM</option>
-                    <option value="15:00">3:00 PM</option>
-                    <option value="16:00">4:00 PM</option>
-                    <option value="17:00">5:00 PM</option>
-                    <option value="18:00">6:00 PM</option>
-                    <option value="19:00">7:00 PM</option>
-                    <option value="20:00">8:00 PM</option>
-                  </select>
-                  {formErrors.startTime && (
-                    <div className="venue-form-error">{formErrors.startTime}</div>
-                  )}
-                </div>
-
-                <div className="venue-form-group">
-                  <label className="venue-form-label">Duration</label>
-                  <select
-                    className="venue-form-input"
-                    value={formData.duration}
-                    onChange={(e) => handleInputChange('duration', e.target.value)}
-                  >
-                    <option value="2">2 hours</option>
-                    <option value="4">4 hours</option>
-                    <option value="6">6 hours</option>
-                    <option value="8">8 hours</option>
-                    <option value="12">12 hours</option>
-                  </select>
-                </div>
-
-                <div className="venue-form-group">
-                  <label className="venue-form-label">Number of Guests *</label>
-                  <input
-                    type="number"
-                    className={`venue-form-input ${formErrors.guests ? 'venue-input-error' : ''}`}
-                    placeholder="Enter number of guests"
-                    value={formData.guests}
-                    onChange={(e) => handleInputChange('guests', e.target.value)}
-                    min="1"
-                    max="1000"
-                  />
-                  {formErrors.guests && (
-                    <div className="venue-form-error">{formErrors.guests}</div>
-                  )}
-                </div>
-
-                <div className="venue-form-group">
-                  <label className="venue-form-label">Special Requests</label>
-                  <textarea
-                    className="venue-form-textarea"
-                    placeholder="Any special requirements or requests..."
-                    value={formData.specialRequests}
-                    onChange={(e) => handleInputChange('specialRequests', e.target.value)}
-                    rows="3"
-                  />
-                </div>
-
-                <button 
-                  type="submit" 
-                  className="venue-continue-btn"
-                  disabled={loading}
-                >
-                  {loading ? "Submitting..." : "Submit Booking Request"}
-                </button>
+                    {loading ? 'Submitting...' : 'Submit Booking Request'}
+                  </button>
               </form>
             </div>
           </div>

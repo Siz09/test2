@@ -25,21 +25,17 @@ const UserViewVenue = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch venue details
         const venueData = await venueService.getVenue(id);
         setVenue(venueData);
 
-        // Fetch venue image
         try {
           const imageBlob = await imageService.getImage(id);
           const imageUrl = URL.createObjectURL(imageBlob);
           setVenueImage(imageUrl);
         } catch (imgError) {
           console.warn('Could not load venue image:', imgError);
-          // Use fallback image if image fetch fails
           setVenueImage('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80');
         }
-
       } catch (error) {
         console.error('Error fetching venue details:', error);
         if (error.response?.status === 404) {
@@ -56,7 +52,6 @@ const UserViewVenue = () => {
 
     fetchVenueDetails();
 
-    // Cleanup function to revoke blob URL
     return () => {
       if (venueImage && venueImage.startsWith('blob:')) {
         URL.revokeObjectURL(venueImage);
@@ -74,10 +69,10 @@ const UserViewVenue = () => {
 
   if (loading) {
     return (
-      <div className="user-view-venue-page">
+      <div className="uvv-page">
         <Header />
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
+        <div className="uvv-loading">
+          <div className="uvv-loading__spinner"></div>
           <p>Loading venue details...</p>
         </div>
         <Footer />
@@ -87,19 +82,15 @@ const UserViewVenue = () => {
 
   if (error) {
     return (
-      <div className="user-view-venue-page">
+      <div className="uvv-page">
         <Header />
-        <div className="error-container">
-          <div className="error-icon">⚠️</div>
-          <h2>Oops! Something went wrong</h2>
-          <p className="error-message">{error}</p>
-          <div className="error-actions">
-            <button onClick={handleBackToVenues} className="back-button">
-              ← Back to Venues
-            </button>
-            <button onClick={() => window.location.reload()} className="retry-button">
-              Try Again
-            </button>
+        <div className="uvv-error">
+          <div className="uvv-error__icon">⚠️</div>
+          <h2 className="uvv-error__title">Oops! Something went wrong</h2>
+          <p className="uvv-error__message">{error}</p>
+          <div className="uvv-error__actions">
+            <button onClick={handleBackToVenues} className="uvv-button--back">← Back to Venues</button>
+            <button onClick={() => window.location.reload()} className="uvv-button--retry">Try Again</button>
           </div>
         </div>
         <Footer />
@@ -109,15 +100,13 @@ const UserViewVenue = () => {
 
   if (!venue) {
     return (
-      <div className="user-view-venue-page">
+      <div className="uvv-page">
         <Header />
-        <div className="error-container">
-          <div className="error-icon">🏢</div>
-          <h2>Venue Not Found</h2>
-          <p className="error-message">The venue you're looking for doesn't exist or has been removed.</p>
-          <button onClick={handleBackToVenues} className="back-button">
-            ← Back to Venues
-          </button>
+        <div className="uvv-error">
+          <div className="uvv-error__icon">🏢</div>
+          <h2 className="uvv-error__title">Venue Not Found</h2>
+          <p className="uvv-error__message">The venue you're looking for doesn't exist or has been removed.</p>
+          <button onClick={handleBackToVenues} className="uvv-button--back">← Back to Venues</button>
         </div>
         <Footer />
       </div>
@@ -125,34 +114,32 @@ const UserViewVenue = () => {
   }
 
   return (
-    <div className="user-view-venue-page">
+    <div className="uvv-page">
       <Header />
-      
-      {/* Breadcrumb Navigation */}
-      <div className="breadcrumb-container">
-        <div className="breadcrumb">
-          <Link to="/home" className="breadcrumb-link">Home</Link>
-          <span className="breadcrumb-separator">›</span>
-          <Link to="/venues" className="breadcrumb-link">Venues</Link>
-          <span className="breadcrumb-separator">›</span>
-          <span className="breadcrumb-current">{venue.venueName}</span>
+
+      <div className="uvv-breadcrumb-container">
+        <div className="uvv-breadcrumb">
+          <Link to="/home" className="uvv-breadcrumb__link">Home</Link>
+          <span className="uvv-breadcrumb__separator">›</span>
+          <Link to="/venues" className="uvv-breadcrumb__link">Venues</Link>
+          <span className="uvv-breadcrumb__separator">›</span>
+          <span className="uvv-breadcrumb__current">{venue.venueName}</span>
         </div>
       </div>
 
-      <div className="venue-detail-container">
-        {/* Hero Section */}
-        <div className="venue-hero">
-          <div className="venue-image-container">
+      <div className="uvv-container">
+        <div className="uvv-hero">
+          <div className="uvv-hero__image-container">
             <img
               src={venueImage || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80'}
               alt={venue.venueName}
-              className="venue-hero-image"
+              className="uvv-hero__image"
             />
-            <div className="venue-hero-overlay">
-              <div className="venue-hero-content">
-                <h1 className="venue-title">{venue.venueName}</h1>
-                <div className="venue-location">
-                  <span className="location-icon">📍</span>
+            <div className="uvv-hero__overlay">
+              <div className="uvv-hero__content">
+                <h1 className="uvv-hero__title">{venue.venueName}</h1>
+                <div className="uvv-hero__location">
+                  <span className="uvv-hero__location-icon">📍</span>
                   {venue.location}
                 </div>
               </div>
@@ -160,146 +147,103 @@ const UserViewVenue = () => {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="venue-content">
-          <div className="venue-main-info">
-            {/* Quick Stats */}
-            <div className="venue-stats">
-              <div className="stat-item">
-                <div className="stat-icon">👥</div>
-                <div className="stat-content">
-                  <div className="stat-label">Capacity</div>
-                  <div className="stat-value">{venue.capacity} guests</div>
+        <div className="uvv-content">
+          <div className="uvv-main-info">
+            <div className="uvv-stats">
+              <div className="uvv-stats__item">
+                <div className="uvv-stats__icon">👥</div>
+                <div className="uvv-stats__content">
+                  <div className="uvv-stats__label">Capacity</div>
+                  <div className="uvv-stats__value">{venue.capacity} guests</div>
                 </div>
               </div>
-              
-              <div className="stat-item">
-                <div className="stat-icon">💰</div>
-                <div className="stat-content">
-                  <div className="stat-label">Price</div>
-                  <div className="stat-value">NPR {venue.price}/hour</div>
+
+              <div className="uvv-stats__item">
+                <div className="uvv-stats__icon">💰</div>
+                <div className="uvv-stats__content">
+                  <div className="uvv-stats__label">Price</div>
+                  <div className="uvv-stats__value">NPR {venue.price}/hour</div>
                 </div>
               </div>
-              
-              <div className="stat-item">
-                <div className="stat-icon">⭐</div>
-                <div className="stat-content">
-                  <div className="stat-label">Rating</div>
-                  <div className="stat-value">4.8/5</div>
+
+              <div className="uvv-stats__item">
+                <div className="uvv-stats__icon">⭐</div>
+                <div className="uvv-stats__content">
+                  <div className="uvv-stats__label">Rating</div>
+                  <div className="uvv-stats__value">4.8/5</div>
                 </div>
               </div>
-              
-              <div className="stat-item">
-                <div className="stat-icon">📅</div>
-                <div className="stat-content">
-                  <div className="stat-label">Status</div>
-                  <div className="stat-value">{venue.status || 'Available'}</div>
+
+              <div className="uvv-stats__item">
+                <div className="uvv-stats__icon">📅</div>
+                <div className="uvv-stats__content">
+                  <div className="uvv-stats__label">Status</div>
+                  <div className="uvv-stats__value">{venue.status || 'Available'}</div>
                 </div>
               </div>
             </div>
 
-            {/* Description Section */}
-            <div className="venue-description">
-              <h2>About This Venue</h2>
-              <p>
-                {venue.description || 
-                `${venue.venueName} is a premium venue located in ${venue.location}. 
-                Perfect for weddings, corporate events, and special celebrations. 
-                With a capacity of ${venue.capacity} guests, this venue offers 
-                modern amenities and elegant décor to make your event memorable.`}
+            <div className="uvv-description">
+              <h2 className="uvv-description__title">About This Venue</h2>
+              <p className="uvv-description__text">
+                {venue.description ||
+                  `${venue.venueName} is a premium venue located in ${venue.location}. 
+                  Perfect for weddings, corporate events, and special celebrations. 
+                  With a capacity of ${venue.capacity} guests, this venue offers 
+                  modern amenities and elegant décor to make your event memorable.`}
               </p>
             </div>
 
-            {/* Features Section */}
-            <div className="venue-features">
-              <h2>Features & Amenities</h2>
-              <div className="features-grid">
-                <div className="feature-item">
-                  <span className="feature-icon">🅿️</span>
-                  <span>Free Parking</span>
-                </div>
-                <div className="feature-item">
-                  <span className="feature-icon">📶</span>
-                  <span>WiFi Available</span>
-                </div>
-                <div className="feature-item">
-                  <span className="feature-icon">❄️</span>
-                  <span>Air Conditioning</span>
-                </div>
-                <div className="feature-item">
-                  <span className="feature-icon">🎵</span>
-                  <span>Sound System</span>
-                </div>
-                <div className="feature-item">
-                  <span className="feature-icon">💡</span>
-                  <span>Professional Lighting</span>
-                </div>
-                <div className="feature-item">
-                  <span className="feature-icon">🍽️</span>
-                  <span>Catering Available</span>
-                </div>
+            <div className="uvv-features">
+              <h2 className="uvv-features__title">Features & Amenities</h2>
+              <div className="uvv-features__grid">
+                <div className="uvv-features__item"><span className="uvv-features__icon">🅿️</span><span>Free Parking</span></div>
+                <div className="uvv-features__item"><span className="uvv-features__icon">📶</span><span>WiFi Available</span></div>
+                <div className="uvv-features__item"><span className="uvv-features__icon">❄️</span><span>Air Conditioning</span></div>
+                <div className="uvv-features__item"><span className="uvv-features__icon">🎵</span><span>Sound System</span></div>
+                <div className="uvv-features__item"><span className="uvv-features__icon">💡</span><span>Professional Lighting</span></div>
+                <div className="uvv-features__item"><span className="uvv-features__icon">🍽️</span><span>Catering Available</span></div>
               </div>
             </div>
 
-            {/* Contact Information */}
-            <div className="venue-contact">
-              <h2>Contact Information</h2>
-              <div className="contact-details">
-                <div className="contact-item">
-                  <span className="contact-icon">📧</span>
-                  <span>info@{venue.venueName?.toLowerCase().replace(/\s+/g, '')}.com</span>
-                </div>
-                <div className="contact-item">
-                  <span className="contact-icon">📞</span>
-                  <span>+977-1-4567890</span>
-                </div>
-                <div className="contact-item">
-                  <span className="contact-icon">🌐</span>
-                  <span>www.{venue.venueName?.toLowerCase().replace(/\s+/g, '')}.com</span>
-                </div>
+            <div className="uvv-contact">
+              <h2 className="uvv-contact__title">Contact Information</h2>
+              <div className="uvv-contact__details">
+                <div className="uvv-contact__item"><span className="uvv-contact__icon">📧</span><span>info@{venue.venueName?.toLowerCase().replace(/\s+/g, '')}.com</span></div>
+                <div className="uvv-contact__item"><span className="uvv-contact__icon">📞</span><span>+977-1-4567890</span></div>
+                <div className="uvv-contact__item"><span className="uvv-contact__icon">🌐</span><span>www.{venue.venueName?.toLowerCase().replace(/\s+/g, '')}.com</span></div>
               </div>
             </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="venue-sidebar">
-            <div className="booking-card">
-              <div className="booking-header">
-                <h3>Book This Venue</h3>
-                <div className="price-display">
-                  <span className="price">NPR {venue.price}</span>
-                  <span className="price-unit">/hour</span>
+          <div className="uvv-sidebar">
+            <div className="uvv-booking">
+              <div className="uvv-booking__header">
+                <h3 className="uvv-booking__title">Book This Venue</h3>
+                <div className="uvv-booking__price">
+                  <span className="uvv-booking__price-value">NPR {venue.price}</span>
+                  <span className="uvv-booking__price-unit">/hour</span>
                 </div>
               </div>
-              
-              <div className="booking-content">
-                <p className="booking-description">
-                  Ready to book this amazing venue for your event?
-                </p>
-                
-                <button onClick={handleBookVenue} className="book-now-button">
-                  Book Now
-                </button>
-                
-                <div className="booking-note">
-                  <small>* Final pricing may vary based on event requirements</small>
-                </div>
+
+              <div className="uvv-booking__content">
+                <p className="uvv-booking__description">Ready to book this amazing venue for your event?</p>
+                <button onClick={handleBookVenue} className="uvv-booking__button">Book Now</button>
+                <div className="uvv-booking__note"><small>* Final pricing may vary based on event requirements</small></div>
               </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="quick-actions">
-              <button onClick={handleBackToVenues} className="action-button secondary">
-                ← Back to Venues
-              </button>
-              <button onClick={() => window.print()} className="action-button secondary">
-                🖨️ Print Details
-              </button>
-              <button onClick={() => navigator.share && navigator.share({
-                title: venue.venueName,
-                text: `Check out ${venue.venueName} - ${venue.location}`,
-                url: window.location.href
-              })} className="action-button secondary">
+            <div className="uvv-actions">
+              <button onClick={handleBackToVenues} className="uvv-actions__button uvv-actions__button--secondary">← Back to Venues</button>
+              <button onClick={() => window.print()} className="uvv-actions__button uvv-actions__button--secondary">🖨️ Print Details</button>
+              <button
+                onClick={() => navigator.share && navigator.share({
+                  title: venue.venueName,
+                  text: `Check out ${venue.venueName} - ${venue.location}`,
+                  url: window.location.href
+                })}
+                className="uvv-actions__button uvv-actions__button--secondary"
+              >
                 📤 Share
               </button>
             </div>

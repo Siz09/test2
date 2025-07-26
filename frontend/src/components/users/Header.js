@@ -411,9 +411,9 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
         <span className="nav-link" onClick={() => handleNavigation("/about")}>
           About
         </span>
-        <span className="nav-link" onClick={() => handleNavigation("/media")}>
+        {/* <span className="nav-link" onClick={() => handleNavigation("/media")}>
           Media
-        </span>
+        </span> */}
         <span className="nav-link" onClick={() => handleNavigation("/contact")}>
           Contact Us
         </span>

@@ -28,6 +28,8 @@ import Profile from "./components/admin/Profile";
 import PartnerAddTest from "./components/admin/PartnerAddTest";
 import EditPartner from "./components/admin/EditPartner";
 import EditVenue from "./components/admin/EditVenue";
+import UserViewVenue from "./components/users/UserViewVenue";
+
 
 import "./styles/auth.css";
 import "./App.css";
@@ -48,7 +50,9 @@ import PartnerEditVenue from "./components/partner/EditVenue";
 import PartnerViewVenue from "./components/partner/ViewVenue";
 import PartnerNotification from "./components/partner/Notification";
 import PartnerProfile from "./components/partner/Profile";
-// import { UserSessionProvider } from "./context/UserSessionContext";
+
+import ViewBooking from "./components/admin/ViewBookings";
+import EditBooking from "./components/admin/EditBooking";
 
 function App() {
   const { user, isUserLoggedIn, login, logout } = useUserSession();
@@ -129,6 +133,18 @@ function App() {
           />
 
           <Route
+            path="/venues/:id"
+            element={
+              <>
+                <Header isLoggedIn={isUserLoggedIn} user={user} onLogout={logout} hasNotifications={true} />
+                <div className="page-content">
+                  <UserViewVenue />
+                </div>
+                <Footer />
+              </>
+            }
+          />
+          <Route
             path="/user-profile"
             element={
               <>
@@ -187,10 +203,26 @@ function App() {
           <Route path="/admin/partners/:partnerId" element={<ViewPartner />} />
           <Route path="/admin/venues/:id" element={<ViewVenue />} />
           <Route path="/admin/bookings/new" element={<AddBook />} />
-         
+        <Route path="/bookings/:bookingId" element={<ViewBooking />} />  
+        <Route path="/bookings/edit/:bookingId" element={<EditBooking />} />
 
           {/* Redundant user route if needed */}
           <Route path="/user/home" element={<HomePage />} />
+          
+
+         < Route
+            path="/venues/:id"
+            element={
+              <>
+                <Header isLoggedIn={isUserLoggedIn} user={user} onLogout={logout} hasNotifications={true} />
+                <div className="page-content">
+                  <UserViewVenue />
+                </div>
+                <Footer />
+              </>
+            }
+          />
+
 
           {/* Authentication Routes */}
           <Route

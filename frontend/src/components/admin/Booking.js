@@ -4,52 +4,48 @@ import { useNavigate } from 'react-router-dom';
 import { bookingService } from '../../services/api';
 
 const statusColors = {
-  Confirmed: '#b2ffb2',
-  Active: '#b2ffb2',
-  Cancelled: '#ffb2b2',
-  Pending: '#fff7b2',
+  Confirmed: "#b2ffb2",
+  Active: "#b2ffb2",
+  Cancelled: "#ffb2b2",
+  Pending: "#fff7b2",
 };
 
 const statusTextColors = {
-  Confirmed: '#1a7f1a',
-  Active: '#1a7f1a',
-  Cancelled: '#b21a1a',
-  Pending: '#b29a1a',
+  Confirmed: "#1a7f1a",
+  Active: "#1a7f1a",
+  Cancelled: "#b21a1a",
+  Pending: "#b29a1a",
 };
 
 const Booking = () => {
-const navigate = useNavigate();
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [search, setSearch] = useState("");
   const [actionMenu, setActionMenu] = useState({ open: false, index: null });
   const menuRef = useRef(null);
   const [loading, setLoading] = useState(true);
-      const [error, setError] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-  
-     const fetchBookings = async () => {
-    setLoading(true);
-    try {
-      const response = await bookingService.listBooking();
-      setBookings(response);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to fetch bookings.");
-      setBookings([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchBookings();
-}, []);
+    const fetchBookings = async () => {
+      setLoading(true);
+      try {
+        const response = await bookingService.listBooking();
+        setBookings(response);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to fetch bookings.");
+        setBookings([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBookings();
+  }, []);
 
-   useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(event.target)
-      ) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
         setActionMenu({ open: false, index: null });
       }
     };
@@ -64,15 +60,23 @@ const navigate = useNavigate();
   }, [actionMenu]);
 
   const handleAction = (action, booking) => {
-    setActionMenu({ open: false, index: null });
-    console.log(`${action} clicked for booking ID ${booking.id}`);
-    // Implement your API call here if needed
-  };
+  setActionMenu({ open: false, index: null });
+
+  if (action === 'View Booking') {
+    navigate(`/bookings/${booking.bookingId}`);
+  }
+
+   if (action === 'Edit Booking') {
+    navigate(`/bookings/edit/${booking.bookingId}`);
+  }
+
+  console.log(`${action} clicked for booking ID ${booking.bookingId}`);
+};
 
   const filteredBookings = bookings.filter(
     (b) =>
-      b.customer.toLowerCase().includes(search.toLowerCase()) ||
-      b.venue.toLowerCase().includes(search.toLowerCase())
+      b.venueName?.toLowerCase().includes(search.toLowerCase()) ||
+      b.partnerName?.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleAdd = () => {
@@ -80,25 +84,42 @@ const navigate = useNavigate();
     setActionMenu({ open: false, index: null });
   };
 
-  
   return (
     <div className="booking-management-container">
       <div className="booking-header">
         <h2>Booking Management</h2>
-          <button onClick={handleAdd} style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 22px', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>+ Add New Booking</button>
+        <button
+          onClick={handleAdd}
+          style={{
+            background: "#111",
+            color: "#fff",
+            border: "none",
+            borderRadius: 6,
+            padding: "10px 22px",
+            fontWeight: 600,
+            fontSize: 16,
+            cursor: "pointer",
+          }}
+        >
+          + Add New Booking
+        </button>
       </div>
-      <a href="#" className="manage-link">Manage all booking</a>
+      <a href="#" className="manage-link">
+        Manage all booking
+      </a>
       <div className="booking-table-container">
         <div className="booking-table-header">
           <div>All Bookings</div>
-          <div className="booking-table-desc">A list of all booking made on the platform</div>
+          <div className="booking-table-desc">
+            A list of all bookings made on the platform
+          </div>
         </div>
         <input
           type="text"
           className="booking-search"
-          placeholder="Search user by name or email..."
+          placeholder="Search by venue or partner..."
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
         />
         <table className="booking-table">
           <thead>
@@ -106,46 +127,68 @@ const navigate = useNavigate();
               <th>ID</th>
               <th>Venue Name</th>
               <th>Partner</th>
-              <th>Customer</th>
               <th>Date/Time</th>
-              <th>Amount</th>
+              <th>Duration</th>
+              <th>Guests</th>
               <th>Status</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {filteredBookings.map((b, idx) => (
-              <tr key={b.id}>
-                <td>{b.id}</td>
-                <td>{b.venue}</td>
-                <td>{b.partner}</td>
-                <td>{b.customer}</td>
-                <td>{b.datetime}</td>
-                <td>{b.amount}</td>
+              <tr key={b.bookingId}>
+                <td>{b.bookingId}</td>
+                <td>{b.venueName}</td>
+                <td>{b.partnerName}</td>
+                <td>{new Date(b.bookedTime).toLocaleString()}</td>
+                <td>{b.duration}</td>
+                <td>{b.guests}</td>
                 <td>
                   <span
                     className="status-badge"
-                    style={{ background: statusColors[b.status] || '#eee', color: statusTextColors[b.status] || '#333' }}
+                    style={{
+                      background: statusColors[b.status] || "#eee",
+                      color: statusTextColors[b.status] || "#333",
+                    }}
                   >
                     {b.status}
                   </span>
                 </td>
-                <td style={{ position: 'relative' }}>
+                <td style={{ position: "relative" }}>
                   <button
                     className="action-btn"
-                    onClick={() => setActionMenu({ open: !actionMenu.open || actionMenu.index !== idx, index: idx })}
+                    onClick={() =>
+                      setActionMenu({
+                        open:
+                          !actionMenu.open || actionMenu.index !== idx,
+                        index: idx,
+                      })
+                    }
                   >
                     &#8942;
                   </button>
                   {actionMenu.open && actionMenu.index === idx && (
-                    <div className="action-menu">
+                    <div className="action-menu" ref={menuRef}>
                       <div className="action-menu-title">Actions</div>
-                      <div onClick={() => handleAction('View Details', b)}>View Details</div>
-                      <div onClick={() => handleAction('Edit Venue', b)}>Edit Venue</div>
-                      <div onClick={() => handleAction('View Bookings', b)}>View Bookings</div>
-                      <div onClick={() => handleAction('Approve Venue', b)}>Approve Venue</div>
-                      <div onClick={() => handleAction('Reject Venue', b)}>Reject Venue</div>
-                      <div className="delete-action" onClick={() => handleAction('Delete Venue', b)}>Delete Venue</div>
+                     <div onClick={() => handleAction("View Booking", b)}>
+                      View Booking
+                      </div>
+
+                     <div onClick={() => handleAction("Edit Booking", b)}>
+  Edit Booking
+</div>
+                      <div onClick={() => handleAction("Approve Venue", b)}>
+                        Approve Venue
+                      </div>
+                      <div onClick={() => handleAction("Reject Venue", b)}>
+                        Reject Venue
+                      </div>
+                      <div
+                        className="delete-action"
+                        onClick={() => handleAction("Delete Venue", b)}
+                      >
+                        Delete Venue
+                      </div>
                     </div>
                   )}
                 </td>
@@ -153,6 +196,8 @@ const navigate = useNavigate();
             ))}
           </tbody>
         </table>
+        {loading && <p>Loading bookings...</p>}
+        {error && <p style={{ color: "red" }}>{error}</p>}
       </div>
     </div>
   );

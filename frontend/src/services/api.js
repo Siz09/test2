@@ -269,14 +269,22 @@ const partnerService = {
     }
   },
 
-  addPartner: async (partnerData) => {
+
+
+    addPartner: async (partnerData) => {
     try {
-      const response = await api.post("/admin/partners/new", partnerData);
+      const token = localStorage.getItem('jwtToken');
+      const response = await api.post("/admin/partners/new", partnerData, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       return response.data;
     } catch (error) {
       throw error;
     }
   },
+
 
   editPartner: async (id, partnerData) => {
     try {
@@ -378,14 +386,27 @@ const bookingService = {
   return response.data;
 },
 
-   listBooking: async () => {
-    try {
-      const response = await api.get("/admin/bookings");
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
+    listBooking: async () => {
+  const token = localStorage.getItem('jwtToken');
+  if (!token) {
+    console.error('No JWT token found. Please log in.');
+    return null; // Or handle as appropriate
+  }
+
+  try {
+    console.log('JWT Token:', token);
+    const response = await api.get("/bookings", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    console.log('Booking Data:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    throw error; // Or handle as appropriate
+  }
+},
 
 
   getUserBookings: async () => {
@@ -416,6 +437,14 @@ const bookingService = {
     }
   },
   
+  editBooking: async (bookingId,bookingData) => {
+    try {
+      const response = await api.put(`/bookings/edit/${bookingId}`, bookingData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 const profileService = {
