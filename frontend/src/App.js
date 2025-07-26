@@ -6,6 +6,8 @@ import { useUserSession } from "./context/UserSessionContext";
 import LoginPage from "./components/auth/login-page";
 import SignupPage from "./components/auth/signup-page";
 import PartnerSignupPage from "./components/auth/partner-signup-page";
+import ForgotPasswordPage from "./components/auth/forgot-password-page";
+import ResetPasswordPage from "./components/auth/reset-password-page";
 import HomePage from "./components/users/HomePage";
 import AdminPanel from "./components/admin/Adminpanel";
 import Dashboard from "./components/admin/Dashboard";
@@ -248,6 +250,24 @@ function App() {
             element={
               <div className="auth-container">
                 <PartnerSignupPage />
+              </div>
+            }
+          />
+
+          <Route
+            path="/forgot-password"
+            element={
+              <div className="auth-container">
+                <ForgotPasswordPage />
+              </div>
+            }
+          />
+
+          <Route
+            path="/reset-password/:token"
+            element={
+              <div className="auth-container">
+                <ResetPasswordPage />
               </div>
             }
           />
