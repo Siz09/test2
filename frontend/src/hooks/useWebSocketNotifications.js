@@ -1,150 +1,39 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
-const useWebSocketNotifications = (userId, onNotificationReceived) => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [connectionError, setConnectionError] = useState(null);
-  const clientRef = useRef(null);
-  const reconnectTimeoutRef = useRef(null);
-  const reconnectAttempts = useRef(0);
-  const maxReconnectAttempts = 5;
-
-  const connect = useCallback(() => {
-    if (!userId) {
-      console.log('No userId provided, skipping WebSocket connection');
-      return;
-    }
-
-    // Clean up existing connection
-    if (clientRef.current) {
-      clientRef.current.deactivate();
-    }
-
-    const client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
-      connectHeaders: {
-        // Add JWT token if available
-        Authorization: `Bearer ${localStorage.getItem('jwtToken') || ''}`,
-      },
-      debug: (str) => {
-        console.log('STOMP Debug:', str);
-      },
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-    });
-
-    client.onConnect = (frame) => {
-      console.log('Connected to WebSocket:', frame);
-      setIsConnected(true);
-      setConnectionError(null);
-      reconnectAttempts.current = 0;
-
-      // Subscribe to user-specific notifications
-      client.subscribe(`/topic/notifications/${userId}`, (message) => {
-        try {
-          const notification = JSON.parse(message.body);
-          console.log('Received notification:', notification);
-          
-          if (onNotificationReceived) {
-            onNotificationReceived(notification);
-          }
-        } catch (error) {
-          console.error('Error parsing notification:', error);
-        }
-      });
-
-      // Subscribe to broadcast notifications
-      client.subscribe('/topic/notifications/all', (message) => {
-        try {
-          const notification = JSON.parse(message.body);
-          console.log('Received broadcast notification:', notification);
-          
-          if (onNotificationReceived) {
-            onNotificationReceived(notification);
-          }
-        } catch (error) {
-          console.error('Error parsing broadcast notification:', error);
-        }
-      });
-    };
-
-    client.onStompError = (frame) => {
-      console.error('Broker reported error:', frame.headers['message']);
-      console.error('Additional details:', frame.body);
-      setConnectionError('Connection error occurred');
-      setIsConnected(false);
-    };
-
-    client.onWebSocketError = (error) => {
-      console.error('WebSocket error:', error);
-      setConnectionError('WebSocket connection failed');
-      setIsConnected(false);
-    };
-
-    client.onDisconnect = () => {
-      console.log('Disconnected from WebSocket');
-      setIsConnected(false);
-      
-      // Attempt to reconnect if not manually disconnected
-      if (reconnectAttempts.current < maxReconnectAttempts) {
-        reconnectAttempts.current++;
-        console.log(`Attempting to reconnect... (${reconnectAttempts.current}/${maxReconnectAttempts})`);
-        
-        reconnectTimeoutRef.current = setTimeout(() => {
-          connect();
-        }, 5000 * reconnectAttempts.current); // Exponential backoff
-      } else {
-        setConnectionError('Failed to reconnect after multiple attempts');
-      }
-    };
-
-    clientRef.current = client;
-    client.activate();
-  }, [userId, onNotificationReceived]);
-
-  const disconnect = useCallback(() => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-    }
-    
-    if (clientRef.current) {
-      clientRef.current.deactivate();
-      clientRef.current = null;
-    }
-    
-    setIsConnected(false);
-    setConnectionError(null);
-    reconnectAttempts.current = 0;
-  }, []);
-
-  const sendMessage = useCallback((destination, message) => {
-    if (clientRef.current && isConnected) {
-      clientRef.current.publish({
-        destination,
-        body: JSON.stringify(message),
-      });
-    } else {
-      console.warn('Cannot send message: WebSocket not connected');
-    }
-  }, [isConnected]);
+export default function WebSocketTest() {
+  const userId = localStorage.getItem('userId'); // Get from localStorage
 
   useEffect(() => {
-    connect();
+    const client = new Client({
+      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      debug: (str) => console.log('STOMP:', str),
+      onConnect: (frame) => {
+        console.log('✅ Connected:', frame);
+
+        // Global notifications
+        client.subscribe('/topic/notifications/all', (msg) => {
+          console.log('📢 Broadcast message:', msg.body);
+        });
+
+        // User-specific notifications if logged in
+        if (userId) {
+          client.subscribe(`/topic/notifications/${userId}`, (msg) => {
+            console.log(`👤 Message for user ${userId}:`, msg.body);
+          });
+        }
+      },
+      onWebSocketError: (error) => console.error('❌ WebSocket error:', error),
+      onStompError: (frame) => console.error('❌ STOMP error:', frame.headers['message']),
+    });
+
+    client.activate();
 
     return () => {
-      disconnect();
+      client.deactivate();
     };
-  }, [connect, disconnect]);
+  }, [userId]);
 
-  return {
-    isConnected,
-    connectionError,
-    connect,
-    disconnect,
-    sendMessage,
-  };
-};
-
-export default useWebSocketNotifications;
+  return <div>WebSocket test running... Check console.</div>;
+}

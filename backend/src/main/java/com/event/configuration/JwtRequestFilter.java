@@ -25,12 +25,20 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         this.jwtUtil = jwtUtil;
     }
 
-    @Override
+   @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-            throws ServletException, IOException {
-    	
+        throws ServletException, IOException {
 
         try {
+            String path = request.getRequestURI();
+
+            // ✅ Skip WebSocket endpoints (handshake, SockJS fallback)
+            if (path.startsWith("/ws")) {
+                System.out.println("[JwtRequestFilter] Skipping JWT filter for WebSocket request: " + path);
+                chain.doFilter(request, response);
+                return;
+            }
+
             if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
                 // Skip authentication for preflight requests
                 chain.doFilter(request, response);
@@ -46,14 +54,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     String username = jwtUtil.getEmailFromToken(token);
                     String role = jwtUtil.getRoleFromToken(token);
 
-                    System.out.println("[JwtRequestFilter] Username from token: " + username);
-                    System.out.println("[JwtRequestFilter] Role from token: " + role);
-                    
-
                     if (username != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                         List<GrantedAuthority> authorities = List.of(
-                            new SimpleGrantedAuthority(role.toLowerCase()),         // "admin"
-                            new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()) // "ROLE_ADMIN"
+                            new SimpleGrantedAuthority(role.toLowerCase()),
+                            new SimpleGrantedAuthority("ROLE_" + role.toUpperCase())
                         );
 
                         UsernamePasswordAuthenticationToken auth =
@@ -62,9 +66,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(auth);
 
                         System.out.println("[JwtRequestFilter] Authentication set for user: " + username);
-                    
-                    } else {
-                        System.out.println("[JwtRequestFilter] Authentication not set: username or role null or authentication already exists");
                     }
                 } else {
                     System.out.println("[JwtRequestFilter] JWT token validation failed");
@@ -75,11 +76,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             chain.doFilter(request, response);
         } catch (Exception ex) {
-            // Log the error and continue filter chain or you may want to send an error response here
             System.err.println("[JwtRequestFilter] Exception in filter: " + ex.getMessage());
             chain.doFilter(request, response);
         }
-    }
-    
+}
+
     
 }
