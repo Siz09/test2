@@ -107,6 +107,7 @@ const NotificationsPage = () => {
         <button onClick={() => setActiveTab("all")} className={`tab-button ${activeTab === "all" ? "active" : ""}`}>
           All notifications
           {notifications.length > 0 && <span className="tab-count gray">{notifications.length}</span>}
+          }
         </button>
         <button
           onClick={() => setActiveTab("unread")}
@@ -114,6 +115,7 @@ const NotificationsPage = () => {
         >
           Unread
           {unreadCount > 0 && <span className="tab-count red">{unreadCount}</span>}
+          }
         </button>
         <button onClick={() => setActiveTab("read")} className={`tab-button ${activeTab === "read" ? "active" : ""}`}>
           Read
