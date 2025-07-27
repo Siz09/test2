@@ -194,7 +194,7 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
   try {
     logout();               // <-- Call context logout method here
     setProfileDropdownOpen(false);
-    window.location.href = "/home"; // Navigate to home or login
+    window.location.href = "/login"; // Navigate to home or login
     console.log("Logged out successfully");
   } catch (error) {
     console.error("Logout failed:", error);

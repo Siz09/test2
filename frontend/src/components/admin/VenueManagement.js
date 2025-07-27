@@ -72,21 +72,36 @@ const handleAdd = (id) => {
 };
 
 
+
 useEffect(() => {
     const fetchVenues = async () => {
     setLoading(true);
    try {
         const response = await venueService.listVenue();
+        console.log("API venues response:", response);
 
+
+        
         // Map venues and set initial state
         const mappedVenues = response.map(v => ({
+          
           venue_id: v.venue_id,
-          venueName: v.venueName || v.venue_name,
+          venueName: v.venueName,
+          partnerName: v.partnerName,
           location: v.location,
-          capacity: v.capacity,
           price: v.price,
-       
+          minBookingHours: v.minBookingHours,
+          capacity: v.capacity,
+          openingTime: v.openingTime,
+          closingTime: v.closingTime,
+          status: v.status,
+          description: v.description,
+          amenities: v.amenities || [],
+         bookingCount: v.bookingCount ?? (v.bookings ? v.bookings.length : 0),
+
         }));
+        console.log("Mapped venues with bookingCount:", mappedVenues);
+
 
         setVenues(mappedVenues);
 
@@ -146,14 +161,17 @@ useEffect(() => {
           <tr style={{ background: '#f7f7f7', textAlign: 'left' }}>
             <th style={{ padding: 10 }}>ID</th>
             <th>Venue Image</th>
-            <th style={{ padding: 10 }}>Venue Name</th>
-            <th style={{ padding: 10 }}>Partner</th>
-            <th style={{ padding: 10 }}>Location</th>
-            <th style={{ padding: 10 }}>Capacity</th>
-            <th style={{ padding: 10 }}>Price/Hour</th>
-            <th style={{ padding: 10 }}>Bookings</th>
-            <th style={{ padding: 10 }}>Status</th>
-            <th style={{ padding: 10 }}>Actions</th>
+          <th style={{ padding: 10 }}>Venue Name</th>
+          <th style={{ padding: 10 }}>Partner</th>
+          <th style={{ padding: 10 }}>Location</th>
+          <th style={{ padding: 10 }}>Capacity</th>
+          <th style={{ padding: 10 }}>Price/Hour</th>
+          <th style={{ padding: 10 }}>Minimum Booking Time</th>
+          <th style={{ padding: 10 }}>Opening Time</th>
+          <th style={{ padding: 10 }}>Closing Time</th>
+          <th style={{ padding: 10 }}>Bookings</th>
+          <th style={{ padding: 10 }}>Status</th>
+          <th style={{ padding: 10 }}>Actions</th>
           </tr>
         </thead>
     <tbody>
@@ -171,24 +189,27 @@ useEffect(() => {
             <div>No image available</div>
           )}
       </td>
-      <td style={{ padding: 10 }}>{venue.venueName}</td>
+     <td style={{ padding: 10 }}>{venue.venueName}</td>
       <td style={{ padding: 10 }}>{venue.partnerName}</td>
       <td style={{ padding: 10 }}>{venue.location}</td>
       <td style={{ padding: 10 }}>{venue.capacity}</td>
       <td style={{ padding: 10 }}>{venue.price}</td>
-      <td style={{ padding: 10 }}>{venue.bookings}</td>
+        <td style={{ padding: 10 }}>{venue.minBookingHours}</td>
+      <td style={{ padding: 10 }}>{venue.openingTime}</td>
+      <td style={{ padding: 10 }}>{venue.closingTime}</td>
+      <td style={{ padding: 10 }}>{venue.bookingCount}</td>
       <td style={{ padding: 10 }}>
-        <span style={{
-          background: venue.status === 'Active' ? '#e6ffe6' : '#ffe6e6',
-          color: venue.status === 'Active' ? '#22bb33' : '#d9534f',
-          borderRadius: 12,
-          padding: '4px 14px',
-          fontWeight: 500,
-          fontSize: 14
-        }}>
-          {venue.status}
-        </span>
-      </td>
+  <span style={{
+    background: venue.status?.toLowerCase() === 'active' ? '#e6ffe6' : '#ffe6e6',
+    color:      venue.status?.toLowerCase() === 'active' ? '#22bb33' : '#d9534f',
+    borderRadius: 12,
+    padding: '4px 14px',
+    fontWeight: 500,
+    fontSize: 14
+  }}>
+    {venue.status}
+  </span>
+</td>
       <td style={{ padding: 10, position: 'relative' }}>
         {/* The toggle button */}
         <button

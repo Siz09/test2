@@ -39,7 +39,8 @@ export default function PartnerSignupPage() {
     companyName: "",
     panCard: "",
     businessTranscript: "",
-    role:"partner"
+    role:"partner",
+    status:"active"
   });
 
   const [errors, setErrors] = useState({
@@ -52,7 +53,8 @@ export default function PartnerSignupPage() {
     companyName: "",
     panCard: "",
     businessTranscript: "",
-     role:"partner"
+     role:"partner",
+     status:"active"
   });
 
   const [touched, setTouched] = useState({
@@ -65,6 +67,7 @@ export default function PartnerSignupPage() {
     companyName: false,
     panCard: false,
     businessTranscript: false,
+    status:"active"
   });
 
   const [passwordStrength, setPasswordStrength] = useState({
@@ -289,7 +292,8 @@ export default function PartnerSignupPage() {
           company: formData.companyName,
           panCard: formData.panCard,
           businessTranscripts: formData.businessTranscript,
-          role: "partner"
+          role: "partner",
+          status:"active"
         };
 
         // Call the partner signup API

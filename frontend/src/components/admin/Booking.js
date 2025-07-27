@@ -28,6 +28,7 @@ const Booking = () => {
 
   useEffect(() => {
     const fetchBookings = async () => {
+      console.log(filteredBookings);
       setLoading(true);
       try {
         const response = await bookingService.listBooking();
@@ -126,7 +127,8 @@ const Booking = () => {
             <tr>
               <th>ID</th>
               <th>Venue Name</th>
-              <th>Partner</th>
+               <th>Customer Name</th>
+              <th>Partner Name</th>
               <th>Date/Time</th>
               <th>Duration</th>
               <th>Guests</th>
@@ -139,6 +141,7 @@ const Booking = () => {
               <tr key={b.bookingId}>
                 <td>{b.bookingId}</td>
                 <td>{b.venueName}</td>
+                  <td>{b.attendeeName}</td>
                 <td>{b.partnerName}</td>
                 <td>{new Date(b.bookedTime).toLocaleString()}</td>
                 <td>{b.duration}</td>

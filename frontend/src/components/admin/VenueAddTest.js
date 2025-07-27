@@ -459,45 +459,32 @@ import '../../styles/admin/AdminPanel.css';
 
 // export default VenueAddTest;
 
+
 const VenueAddTest = () => {
   const navigate = useNavigate();
   const [partners, setPartners] = useState([]);
+  const [page, setPage] = useState(1);
   const [formData, setFormData] = useState({
     venueName: '',
-    partnerId: '',  // Keep as string to match <select> value
+    partnerId: '',
     location: '',
-    capacity: '',
+    mapLocation: '',
     price: '',
-    bookings: '',
-    status: '',
-    imageUrl:'',
-    venueTypevz:'',
-    fullAddress:'',
-    city:'',
-    district:'',
-    province:'',
-    mapLocation:'',    // lat/long or map URL
-    capacity:'',
-    pricePerHour:'',
-    minBookingHours:'',
-    openingTime:'',
-    closingTime:'',
-    amenities: [],      // e.g. ["WiFi","Parking"]
-    contactPhone:'',
-    contactEmail:'',
-    mainPhoto:'',
-    additionalPhotos:'',
-    floorPlan:'',
-    description:'',
-    terms:'',
-    agree:'',  // must be true     
+    minBookingHours: '',
+    openingTime: '',
+    closingTime: '',
+    capacity: '',
+    imageUrl: '',
+    description: '',
+    amenities: [],
+    agree: false,
+    status: 'active',
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
 
-  // Fetch partners on mount
   useEffect(() => {
     const fetchPartners = async () => {
       try {
@@ -511,28 +498,52 @@ const VenueAddTest = () => {
     fetchPartners();
   }, []);
 
-  // Handle input changes
+  useEffect(() => {
+  console.log("Form values changed:", formData);
+}, [formData]);
+
+useEffect(() => {
+  console.log("Form errors:", errors);
+}, [errors]);
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,  // keep partnerId as string here
+      [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
-  // Validate required fields
-  const validate = () => {
+  const fieldsPage1 = ['venueName', 'partnerId', 'location', 'mapLocation', 'pricePerHour', 'minBookingHours'];
+  const fieldsPage2 = ['openingTime', 'closingTime', 'imageUrl', 'description', 'amenities', 'agree'];
+
+  const validate = (fieldsToValidate = null) => {
     const newErrors = {};
-    Object.entries(formData).forEach(([key, value]) => {
-      if (!value.trim()) {
-        newErrors[key] = `${key} is required`;
+    const fields = fieldsToValidate || Object.keys(formData);
+
+    fields.forEach((key) => {
+      const value = formData[key];
+
+      if (key === 'agree' && value !== true) {
+        newErrors[key] = 'You must agree to the terms';
+      } else if (
+        (typeof value === 'string' && value.trim() === '') ||
+        (Array.isArray(value) && value.length === 0)
+      ) {
+        newErrors[key] = `${key.charAt(0).toUpperCase() + key.slice(1)} is required`;
       }
     });
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit form data
+  const handleNext = () => {
+    if (validate(fieldsPage1)) setPage(2);
+  };
+
+  const handleBack = () => setPage(1);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
@@ -541,17 +552,16 @@ const VenueAddTest = () => {
     setApiError('');
 
     try {
-      // Convert partnerId to number for backend
       const submitData = {
         ...formData,
-        partnerId: Number(formData.partnerId),
-       venueName: formData.venueName.trim(),
-  location: formData.location.trim(),
-  capacity: Number(formData.capacity),
-  price: Number(formData.price),
-  imageUrl: formData.imageUrl.trim(),
-  status: 'active', 
-        
+       partnerId: formData.partnerId ? Number(formData.partnerId) : null,
+      venueName: formData.venueName.trim(),
+      location: formData.location.trim(),
+      capacity: formData.capacity ? Number(formData.capacity) : 0,
+      price: formData.price ? Number(formData.price) : 0,
+      minBookingHours: formData.minBookingHours ? Number(formData.minBookingHours) : 1,
+      imageUrl: formData.imageUrl.trim(),
+      status: 'active',
       };
 
       console.log('Submitting:', submitData);
@@ -560,33 +570,19 @@ const VenueAddTest = () => {
       alert('Venue added successfully!');
       setFormData({
         venueName: '',
-    partnerId: '',  // Keep as string to match <select> value
-    location: '',
-    capacity: '',
-    price: '',
-    bookings: '',
-    status: '',
-    imageUrl:'',
-    venueTypevz:'',
-    fullAddress:'',
-    city:'',
-    district:'',
-    province:'',
-    mapLocation:'',    // lat/long or map URL
-    capacity:'',
-    pricePerHour:'',
-    minBookingHours:'',
-    openingTime:'',
-    closingTime:'',
-    amenities: [],      // e.g. ["WiFi","Parking"]
-    contactPhone:'',
-    contactEmail:'',
-    mainPhoto:'',
-    additionalPhotos:'',
-    floorPlan:'',
-    description:'',
-    terms:'',
-    agree:'',  // must be true   
+        partnerId: '',
+        location: '',
+        mapLocation: '',
+        price: '',
+        minBookingHours: '',
+        openingTime: '',
+        closingTime: '',
+        capacity: '',
+        imageUrl: '',
+        description: '',
+        amenities: [],
+        agree: false,
+        status: '',
       });
 
       navigate('/admin/venues');
@@ -608,180 +604,310 @@ const VenueAddTest = () => {
     }
   };
 
-   const inputStyle = (field) => ({
+  const inputStyle = (field) => ({
     width: '100%',
-    padding: '10px 12px',
-    fontSize: 15,
-    borderRadius: 4,
-    border: errors[field] ? '1.5px solid #e74c3c' : '1px solid #ccc',
+    padding: '16px 20px',
+    fontSize: 18,
+    borderRadius: 6,
+    border: errors[field] ? '2px solid #e74c3c' : '1.5px solid #ccc',
     outline: 'none',
-    transition: 'border-color 0.2s',
+    marginBottom: 12,
   });
 
+  const labelStyle = {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+    display: 'block',
+  };
+
   return (
-    <form 
-      onSubmit={handleSubmit} 
+    <form
+      onSubmit={handleSubmit}
       style={{
-        maxWidth: 500,
-        margin: '2rem auto',
-        padding: '2rem',
-        background: '#fff',
-        borderRadius: 8,
-        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+        maxWidth: 600,
+        margin: '3rem auto',
+        padding: '3rem',
+        background: '#f9f9f9',
+        borderRadius: 12,
+        boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
       }}
+      noValidate
     >
-      <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', color: '#333' }}>Add New Venue</h2>
+      <h1 style={{ textAlign: 'center', marginBottom: '2rem', color: '#2c3e50' }}>Add New Venue</h1>
 
-      {/* Venue Name */}
-      <div style={{ marginBottom: 16 }}>
-        <label 
-          htmlFor="venueName" 
-          style={{ display: 'block', marginBottom: 6, fontWeight: '600', color: '#444' }}
-        >
-          Venue Name:
-        </label>
-        <input
-          id="venueName"
-          name="venueName"
-          type="text"
-          value={formData.venueName}
-          onChange={handleChange}
-          style={{
-            width: '100%',
-            padding: '10px 12px',
-            fontSize: 15,
-            borderRadius: 4,
-            border: errors.venueName ? '1.5px solid #e74c3c' : '1px solid #ccc',
-            outline: 'none',
-            transition: 'border-color 0.2s',
-          }}
-        />
-        {errors.venueName && <div style={{ color: '#e74c3c', marginTop: 4 }}>{errors.venueName}</div>}
-      </div>
-
-      {/* Partner Dropdown */}
-      <div style={{ marginBottom: 16 }}>
-        <label
-          htmlFor="partnerId"
-          style={{ display: 'block', marginBottom: 6, fontWeight: '600', color: '#444' }}
-        >
-          Partner:
-        </label>
-        <select
-          id="partnerId"
-          name="partnerId"
-          value={formData.partnerId}
-          onChange={handleChange}
-          style={{
-            width: '100%',
-            padding: '10px 12px',
-            fontSize: 15,
-            borderRadius: 4,
-            border: errors.partnerId ? '1.5px solid #e74c3c' : '1px solid #ccc',
-            backgroundColor: '#fff',
-            cursor: 'pointer',
-          }}
-        >
-          <option value="">Select Partner</option>
-          {partners.map((partner) => (
-            <option
-              key={partner.user_id ?? Math.random()}
-              value={partner.user_id?.toString() ?? ''}
-            >
-              {partner.fullname ?? 'Unknown Partner'}
-            </option>
-          ))}
-        </select>
-        {errors.partnerId && <div style={{ color: '#e74c3c', marginTop: 4 }}>{errors.partnerId}</div>}
-      </div>
-
-{/* Image URL */}
-      <div style={{ marginBottom: 16 }}>
-        <label
-          htmlFor="imageUrl"
-          style={{ display: 'block', marginBottom: 6, fontWeight: '600', color: '#444' }}
-        >
-          Image URL:
-        </label>
-        <input
-          id="imageUrl"
-          name="imageUrl"
-          type="url"
-          placeholder="Enter image URL"
-          value={formData.imageUrl}
-          onChange={handleChange}
-          style={inputStyle('imageUrl')}
-          aria-invalid={!!errors.imageUrl}
-          aria-describedby="imageUrl-error"
-        />
-        {errors.imageUrl && (
-          <div id="imageUrl-error" style={{ color: '#e74c3c', marginTop: 4 }}>
-            {errors.imageUrl}
-          </div>
-        )}
-      </div>
-
-      {/* Other fields */}
-      {['location', 'capacity', 'price', 'bookings', 'status'].map((field) => (
-        <div key={field} style={{ marginBottom: 16 }}>
-          <label
-            htmlFor={field}
-            style={{ display: 'block', marginBottom: 6, fontWeight: '600', color: '#444' }}
-          >
-            {field.charAt(0).toUpperCase() + field.slice(1)}:
+      {page === 1 && (
+        <>
+          <label htmlFor="venueName" style={labelStyle}>
+            Venue Name:
           </label>
           <input
-            id={field}
-            name={field}
+            id="venueName"
+            name="venueName"
             type="text"
-            value={formData[field]}
+            value={formData.venueName}
             onChange={handleChange}
+            style={inputStyle('venueName')}
+            placeholder="Enter venue name"
+          />
+          {errors.venueName && <div style={{ color: '#e74c3c' }}>{errors.venueName}</div>}
+
+          <label htmlFor="partnerId" style={labelStyle}>
+            Partner:
+          </label>
+          <select
+            id="partnerId"
+            name="partnerId"
+            value={formData.partnerId}
+            onChange={handleChange}
+            style={inputStyle('partnerId')}
+          >
+            <option value="">Select Partner</option>
+            {partners.map((partner) => (
+              <option key={partner.user_id} value={partner.user_id.toString()}>
+                {partner.fullname}
+              </option>
+            ))}
+          </select>
+          {errors.partnerId && <div style={{ color: '#e74c3c' }}>{errors.partnerId}</div>}
+
+          <label htmlFor="location" style={labelStyle}>
+            Location:
+          </label>
+          <input
+            id="location"
+            name="location"
+            type="text"
+            value={formData.location}
+            onChange={handleChange}
+            style={inputStyle('location')}
+            placeholder="123 Main St, City, State, ZIP"
+          />
+          {errors.location && <div style={{ color: '#e74c3c' }}>{errors.location}</div>}
+
+          <label htmlFor="mapLocation" style={labelStyle}>
+            Map Location URL:
+          </label>
+          <input
+            id="mapLocation"
+            name="mapLocation"
+            type="url"
+            value={formData.mapLocation}
+            onChange={handleChange}
+            style={inputStyle('mapLocation')}
+            placeholder="https://maps.google.com/..."
+          />
+          {errors.mapLocation && <div style={{ color: '#e74c3c' }}>{errors.mapLocation}</div>}
+
+          <label htmlFor="pricePerHour" style={labelStyle}>
+            Price Per Hour ($):
+          </label>
+          <input
+            id="price"
+            name="price"
+            type="number"
+            min="0"
+            value={formData.price}
+            onChange={handleChange}
+            style={inputStyle('price')}
+            placeholder="Enter price per hour"
+          />
+          {errors.pricePerHour && <div style={{ color: '#e74c3c' }}>{errors.pricePerHour}</div>}
+
+          <label htmlFor="minBookingHours" style={labelStyle}>
+            Minimum Booking Hours:
+          </label>
+          <input
+            id="minBookingHours"
+            name="minBookingHours"
+            type="number"
+            min="1"
+            value={formData.minBookingHours}
+            onChange={handleChange}
+            style={inputStyle('minBookingHours')}
+            placeholder="Enter minimum booking hours"
+          />
+          {errors.minBookingHours && <div style={{ color: '#e74c3c' }}>{errors.minBookingHours}</div>}
+
+          <label htmlFor="capacity" style={labelStyle}>
+            Capacity:
+          </label>
+          <input
+            id="capacity"
+            name="capacity"
+            type="number"
+            min="0"
+            value={formData.capacity}
+            onChange={handleChange}
+            style={inputStyle('capacity')}
+            placeholder="Enter venue capacity"
+          />
+          {errors.capacity && <div style={{ color: '#e74c3c' }}>{errors.capacity}</div>}
+
+          <button
+            type="button"
+            onClick={handleNext}
             style={{
               width: '100%',
-              padding: '10px 12px',
-              fontSize: 15,
-              borderRadius: 4,
-              border: errors[field] ? '1.5px solid #e74c3c' : '1px solid #ccc',
-              outline: 'none',
-              transition: 'border-color 0.2s',
+              padding: '18px',
+              fontSize: 20,
+              fontWeight: '700',
+              backgroundColor: '#27ae60',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 8,
+              cursor: 'pointer',
+              marginTop: 24,
             }}
+          >
+            Next
+          </button>
+        </>
+      )}
+
+      {page === 2 && (
+        <>
+          <label htmlFor="openingTime" style={labelStyle}>
+            Opening Time:
+          </label>
+          <input
+            id="openingTime"
+            name="openingTime"
+            type="time"
+            value={formData.openingTime}
+            onChange={handleChange}
+            style={inputStyle('openingTime')}
           />
-          {errors[field] && <div style={{ color: '#e74c3c', marginTop: 4 }}>{errors[field]}</div>}
-        </div>
-      ))}
+          {errors.openingTime && <div style={{ color: '#e74c3c' }}>{errors.openingTime}</div>}
+
+          <label htmlFor="closingTime" style={labelStyle}>
+            Closing Time:
+          </label>
+          <input
+            id="closingTime"
+            name="closingTime"
+            type="time"
+            value={formData.closingTime}
+            onChange={handleChange}
+            style={inputStyle('closingTime')}
+          />
+          {errors.closingTime && <div style={{ color: '#e74c3c' }}>{errors.closingTime}</div>}
+
+          <label htmlFor="imageUrl" style={labelStyle}>
+            Main Photo URL:
+          </label>
+          <input
+            id="imageUrl"
+            name="imageUrl"
+            type="url"
+            value={formData.imageUrl}
+            onChange={handleChange}
+            style={inputStyle('imageUrl')}
+            placeholder="https://example.com/image.jpg"
+          />
+          {errors.imageUrl && <div style={{ color: '#e74c3c' }}>{errors.imageUrl}</div>}
+
+          <label htmlFor="description" style={labelStyle}>
+            Description:
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            style={{ ...inputStyle('description'), height: 100 }}
+            placeholder="Describe the venue"
+          />
+          {errors.description && <div style={{ color: '#e74c3c' }}>{errors.description}</div>}
+
+          <label htmlFor="amenities" style={labelStyle}>
+            Amenities (comma separated):
+          </label>
+          <input
+            id="amenities"
+            name="amenities"
+            type="text"
+            value={formData.amenities.join(', ')}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                amenities: e.target.value
+                  .split(',')
+                  .map((a) => a.trim())
+                  .filter((a) => a !== ''),
+              }))
+            }
+            style={inputStyle('amenities')}
+            placeholder="WiFi, Parking, Projector, ..."
+          />
+          {errors.amenities && <div style={{ color: '#e74c3c' }}>{errors.amenities}</div>}
+
+          <label htmlFor="agree" style={{ display: 'flex', alignItems: 'center', marginTop: 16 }}>
+            <input
+              id="agree"
+              name="agree"
+              type="checkbox"
+              checked={formData.agree}
+              onChange={handleChange}
+              style={{ marginRight: 8 }}
+            />
+            I agree to the terms and conditions
+          </label>
+          {errors.agree && <div style={{ color: '#e74c3c' }}>{errors.agree}</div>}
+
+          <div style={{ marginTop: 24, display: 'flex', gap: '1rem' }}>
+            <button
+              type="button"
+              onClick={handleBack}
+              style={{
+                flex: 1,
+                padding: '14px 20px',
+                fontSize: 18,
+                borderRadius: 6,
+                border: '1px solid #ccc',
+                cursor: 'pointer',
+                backgroundColor: '#f0f0f0',
+              }}
+            >
+              Back
+            </button>
+
+           <button
+  type="submit"
+  disabled={isSubmitting}
+  style={{
+    flex: 1,
+    padding: '14px 20px',
+    fontSize: 18,
+    backgroundColor: '#27ae60',
+    color: 'white',
+    border: 'none',
+    borderRadius: 6,
+    cursor: 'pointer',
+  }}
+>
+  {isSubmitting ? 'Submitting...' : 'Submit'}
+</button>
+          </div>
+        </>
+      )}
 
       {apiError && (
         <div
           style={{
+            marginTop: 24,
+            padding: 12,
+            backgroundColor: '#fce4e4',
             color: '#e74c3c',
-            marginBottom: 16,
+            borderRadius: 6,
             fontWeight: '600',
-            textAlign: 'center',
           }}
         >
           {apiError}
         </div>
       )}
-
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        style={{
-          width: '100%',
-          padding: '12px',
-          backgroundColor: isSubmitting ? '#95c79f' : '#4caf50',
-          color: 'white',
-          border: 'none',
-          borderRadius: 4,
-          fontSize: 16,
-          fontWeight: 'bold',
-          cursor: isSubmitting ? 'not-allowed' : 'pointer',
-          transition: 'background-color 0.3s',
-        }}
-      >
-        {isSubmitting ? 'Submitting...' : 'Add Venue'}
-      </button>
     </form>
   );
 };

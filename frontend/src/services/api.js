@@ -47,9 +47,11 @@ api.interceptors.response.use(
 // Auth API services
 const authService = {
   login: async (credentials) => {
+
     const response = await api.post("/auth/login", credentials);
     if (response.data.token) {
       localStorage.setItem("jwtToken", response.data.token);
+      localStorage.setItem('userId', response.data.id);
 }
 return response.data;
 
@@ -387,11 +389,20 @@ const bookingService = {
 
  createBooking: async (payload) => {
   const token = localStorage.getItem("jwtToken");
-  const response = await api.post("/bookings/new", payload, {
+  const userId = localStorage.getItem("userId"); // Retrieve user ID
+
+  // Include userId in the booking payload
+  const updatedPayload = {
+    ...payload,
+    attendeeId: userId,
+  };
+
+  const response = await api.post("/bookings/new", updatedPayload, {
     headers: {
-      Authorization: `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   });
+
   return response.data;
 },
 
@@ -454,6 +465,21 @@ const bookingService = {
       throw error;
     }
   },
+
+  getBookingsByVenueAndDate: async (venueId, date) => {
+  try {
+    const token = localStorage.getItem('jwtToken');
+    const response = await api.get(`/bookings?venueId=${venueId}&date=${date}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching venue bookings:', error);
+    throw error;
+  }
+}
 };
 
 const profileService = {

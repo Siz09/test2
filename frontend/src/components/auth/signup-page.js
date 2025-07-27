@@ -39,6 +39,7 @@ export default function SignupPage() {
     password: "",
     confirmPassword: "",
      role: "attendee",
+     status:"active",
   });
 
   const [errors, setErrors] = useState({
@@ -49,6 +50,7 @@ export default function SignupPage() {
     password: "",
     confirmPassword: "",
      role: "attendee",
+     status:"active",
   });
 
   const [touched, setTouched] = useState({
@@ -58,6 +60,7 @@ export default function SignupPage() {
     mobile: false,
     password: false,
     confirmPassword: false,
+    status:"active",
   });
 
   const [passwordStrength, setPasswordStrength] = useState({
@@ -247,7 +250,8 @@ export default function SignupPage() {
         email: formData.email,
         phoneNumber: formData.mobile,
         password: formData.password,
-        role: "attendee"
+        role: "attendee",
+        status:"active"
         };
 
         // Call the signup API

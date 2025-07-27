@@ -29,6 +29,7 @@ const buttonVariants = {
 }
 
 export default function LoginPage() {
+  
   const { login } = useUserSession();
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
@@ -133,17 +134,27 @@ export default function LoginPage() {
         role: payload.role,
       };
 
+      // ✅ Store token and user role
       localStorage.setItem("jwtToken", data.token);
       localStorage.setItem("userRole", payload.role);
 
+      // ✅ NEW: Save userId if present in token
+      if (payload.userId !== undefined) {
+        localStorage.setItem("userId", payload.userId.toString());
+        console.log("Saved userId:", payload.userId);
+      } else {
+        console.warn("userId not found in token");
+      }
+
       login(userData, data.token);
 
-      // Navigate based on the backend's redirect or fallback to role-based paths
-      const path = data.redirect || (payload.role === "admin"
-        ? "/admin/dashboard"
-        : payload.role === "partner"
-        ? "/partner/dashboard"
-        : "/home"
+      // ✅ Navigate as before
+      const path = data.redirect || (
+        payload.role === "admin"
+          ? "/admin/dashboard"
+          : payload.role === "partner"
+          ? "/partner/dashboard"
+          : "/home"
       );
       navigate(path, { replace: true });
     } else {
@@ -166,6 +177,7 @@ export default function LoginPage() {
     setIsSubmitting(false);
   }
 };
+
 
 
 

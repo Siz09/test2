@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 const AddUsers = () => {
    const navigate = useNavigate();
-  const [userType, setUserType] = useState('Regular User');
+ const [userType, setUserType] = useState('Attendee');
   const [fullname, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhone] = useState('');
@@ -52,72 +52,53 @@ const AddUsers = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-    
-    setIsSubmitting(true);
-    setApiError('');
-    setSuccessMessage('');
-   
-    
-    const formData = new FormData();
-    formData.append('fullname', fullname);
-    formData.append('email', email);
-    formData.append('phoneNumber', phoneNumber);
-    formData.append('password', password);
-    const role = userType.toLowerCase();
-    formData.append(
-      'role',
-      userType.toUpperCase() === 'ADMIN' ? 'Admin' :
-      userType.toUpperCase() === 'PARTNER' ? 'Partner' :
-      userType.toUpperCase() === 'ATTENDEE' ? 'Attendee' : 
-      'Attendee'
-    );
-    formData.append('status', accountActive ? 'Active' : 'Inactive');
-    formData.append('sendWelcomeEmail', sendEmail);
+  e.preventDefault();
+  if (!validateForm()) return;
+  setIsSubmitting(true);
+  setApiError('');
+  setSuccessMessage('');
 
-    if (userType === 'Partner') {
-      formData.append('company', company);
-      formData.append('businessRegistrationNumber', businessRegistrationNumber);
-      formData.append('businessAddress', businessAddress);
-      formData.append('panCardImage', panCardImage);
-      formData.append('businessDocument', businessDocument);
-    }
-    
-    try {
-      const response = await userService.addUser(formData);
-
-      
-      setSuccessMessage('User created successfully!');
-      // Reset form
-      setFullName('');
-      setEmail('');
-      setPhone('');
-      setPassword('');
-      setConfirmPassword('');
-      setUserType('Attendee');
-      setBusinessName('');
-      setBusinessRegistrationNumber('');
-      setBusinessAddress('');
-      setPanCardImage(null);
-      setBusinessDocument(null);
-      const panCardInput = document.getElementById('panCardImage');
-      const businessDocInput = document.getElementById('businessDocument');
-      if (panCardInput) panCardInput.value = null;
-      if (businessDocInput) businessDocInput.value = null;
-
-      
-      console.log('User created:', response);
-      
-    } catch (error) {
-      console.error('Error creating user:', error);
-      setApiError(error.response?.data?.message || 'Failed to create user. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+  // Construct the partner JSON object
+  const partnerData = {
+    fullname,
+    email,
+    phoneNumber,
+    password,
+    role: userType.charAt(0).toUpperCase() + userType.slice(1).toLowerCase(), // e.g., 'Partner'
+    status: accountActive ? 'Active' : 'Inactive',
+    sendWelcomeEmail: sendEmail,
   };
 
+  if (userType === 'Partner') {
+    partnerData.company = company;
+    partnerData.businessRegistrationNumber = businessRegistrationNumber;
+    partnerData.businessAddress = businessAddress;
+  }
+
+  const formData = new FormData();
+
+  // Append JSON as a Blob with content type application/json
+  formData.append(
+    'partner',
+    new Blob([JSON.stringify(partnerData)], { type: 'application/json' })
+  );
+
+  // Append files (optional)
+  if (userType === 'Partner') {
+    if (panCardImage) formData.append('panCardImage', panCardImage);
+    if (businessDocument) formData.append('businessDocument', businessDocument);
+  }
+
+  try {
+    const response = await userService.addUser(formData);
+    setSuccessMessage('User created successfully!');
+    // reset form states...
+  } catch (error) {
+    setApiError(error.response?.data?.message || 'Failed to create user. Please try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   return (
     <div className="add-user-container">
       <div className="add-user-header">

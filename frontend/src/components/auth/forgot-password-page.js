@@ -1,153 +1,62 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Mail, AlertCircle, CheckCircle, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthCard from "./auth-card";
 import { authService } from "../../services/api";
 
-// Animation variants
-const formControlVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (custom) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: custom * 0.1,
-      duration: 0.4,
-      ease: "easeOut",
-    },
-  }),
-};
-
-const buttonVariants = {
-  idle: { scale: 1 },
-  hover: { scale: 1.03 },
-  tap: { scale: 0.97 },
-};
-
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: "",
-  });
-  const [errors, setErrors] = useState({
-    email: "",
-  });
-  const [touched, setTouched] = useState({
-    email: false,
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [apiError, setApiError] = useState("");
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-
-  // Define validateForm as a useCallback to avoid dependency issues
-  const validateForm = useCallback(() => {
-    const newErrors = {};
-    let isValid = true;
-
-    // Email validation
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-      isValid = false;
-    } else if (!isValidEmail(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
-      isValid = false;
-    } else {
-      newErrors.email = "";
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  }, [formData]);
-
-  // Validate form on input change
-  useEffect(() => {
-    validateForm();
-  }, [validateForm]);
-
-  const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-
-    if (apiError) {
-      setApiError("");
-    }
-    if (successMessage) {
-      setSuccessMessage("");
-    }
-  };
-
-  const handleBlur = (e) => {
-    const { name } = e.target;
-    setTouched({
-      ...touched,
-      [name]: true,
-    });
-  };
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setTouched({ email: true });
-
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
-    setApiError("");
+    setError("");
     setSuccessMessage("");
 
+    if (!email) {
+      setError("Email is required");
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      await authService.requestPasswordReset(formData.email);
-      
+      await authService.requestPasswordReset(email);
       setSuccessMessage(
-        "If an account with this email exists, a password reset link has been sent to your email address. Please check your inbox and follow the instructions."
+        "OTP has been sent to your email. Please check your inbox."
       );
-      
-      // Clear the form
-      setFormData({ email: "" });
-      setTouched({ email: false });
-      
-    } catch (error) {
-      console.error("Password reset request failed:", error);
-      
-      // Always show the same message for security reasons
-      if (error.response?.status === 404) {
-        setSuccessMessage(
-          "If an account with this email exists, a password reset link has been sent to your email address. Please check your inbox and follow the instructions."
-        );
-      } else if (error.response?.data?.message) {
-        setApiError(error.response.data.message);
+
+      // Redirect to reset password page after a short delay
+      setTimeout(() => {
+        navigate("/reset-password");
+      }, 2000);
+    } catch (err) {
+      console.error("Request password reset error:", err);
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
       } else {
-        setApiError("Unable to process your request. Please try again later.");
+        setError("Failed to send reset email. Please try again.");
       }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleBackToLogin = () => {
-    navigate("/login");
-  };
-
   return (
     <AuthCard
-      title="Reset your password"
+      title="Forgot Password"
       imageSrc="https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-      imageAlt="Password reset illustration"
+      imageAlt="Forgot password illustration"
       imagePosition="left"
     >
       <form onSubmit={handleSubmit} noValidate>
         <AnimatePresence>
-          {apiError && (
+          {error && (
             <motion.div
               className="error-banner"
               initial={{ opacity: 0, height: 0, marginBottom: 0 }}
@@ -156,7 +65,7 @@ export default function ForgotPasswordPage() {
               transition={{ duration: 0.3 }}
             >
               <AlertCircle size={16} />
-              <span>{apiError}</span>
+              <span>{error}</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -176,130 +85,44 @@ export default function ForgotPasswordPage() {
           )}
         </AnimatePresence>
 
-        <motion.div
-          className="form-group"
-          variants={formControlVariants}
-          initial="hidden"
-          animate="visible"
-          custom={1}
-        >
-          <label htmlFor="email" className={touched.email && errors.email ? "text-error" : ""}>
+        <div className="form-group">
+          <label htmlFor="email" className={error ? "text-error" : ""}>
             Email Address <span className="required">*</span>
           </label>
-          <div className={`input-container ${touched.email && errors.email ? "input-error" : ""}`}>
-            <motion.input
-              whileFocus={{ scale: 1.01 }}
-              transition={{ duration: 0.2 }}
+          <div className={`input-container ${error ? "input-error" : ""}`}>
+            <input
               type="email"
               id="email"
               name="email"
               placeholder="Enter your email address"
-              value={formData.email}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className={touched.email && !errors.email ? "input-valid" : ""}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
               disabled={isSubmitting}
+              autoComplete="email"
             />
             <Mail className="input-icon" size={20} />
-            <AnimatePresence>
-              {touched.email && !errors.email && formData.email && (
-                <motion.div
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <CheckCircle className="valid-icon" size={16} />
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
-          <AnimatePresence>
-            {touched.email && errors.email && (
-              <motion.p
-                className="error-message"
-                initial={{ opacity: 0, y: -10, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: "auto" }}
-                exit={{ opacity: 0, y: -10, height: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                {errors.email}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </motion.div>
+        </div>
 
-        <motion.div
-          className="form-info"
-          variants={formControlVariants}
-          initial="hidden"
-          animate="visible"
-          custom={2}
-        >
-          <p className="form-help-text">
-            Enter the email address associated with your account and we'll send you a link to reset your password.
-          </p>
-        </motion.div>
-
-        <motion.button
-          className={`auth-button primary-button ${isSubmitting ? "button-loading" : ""}`}
+        <button
           type="submit"
-          disabled={isSubmitting || !formData.email}
-          variants={buttonVariants}
-          initial="idle"
-          whileHover="hover"
-          whileTap="tap"
-          custom={3}
+          className={`auth-button primary-button ${
+            isSubmitting ? "button-loading" : ""
+          }`}
+          disabled={isSubmitting || !email}
         >
-          {isSubmitting ? "Sending Reset Link..." : "Send Reset Link"}
-        </motion.button>
+          {isSubmitting ? "Sending OTP..." : "Send OTP"}
+        </button>
 
-        <motion.div
-          className="form-links"
-          variants={formControlVariants}
-          initial="hidden"
-          animate="visible"
-          custom={4}
+        <button
+          type="button"
+          className="back-to-login-button"
+          onClick={() => navigate("/login")}
+          style={{ marginTop: "1rem" }}
         >
-          <motion.button
-            type="button"
-            className="back-to-login-button"
-            onClick={handleBackToLogin}
-            whileHover={{ x: -3 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            <ArrowLeft size={16} />
-            Back to Login
-          </motion.button>
-        </motion.div>
-
-        <motion.div
-          className="divider"
-          variants={formControlVariants}
-          initial="hidden"
-          animate="visible"
-          custom={5}
-        >
-          <span className="divider-line"></span>
-          <span className="divider-text">OR</span>
-          <span className="divider-line"></span>
-        </motion.div>
-
-        <motion.div
-          className="auth-links"
-          variants={formControlVariants}
-          initial="hidden"
-          animate="visible"
-          custom={6}
-        >
-          <p>
-            Don't have an account?{" "}
-            <Link to="/signup" className="auth-link">
-              Sign up here
-            </Link>
-          </p>
-        </motion.div>
+          <ArrowLeft size={16} /> Back to Login
+        </button>
       </form>
     </AuthCard>
   );
