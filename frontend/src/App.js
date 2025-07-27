@@ -2,6 +2,8 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useUserSession } from "./context/UserSessionContext";
+import { NotificationProvider } from "./components/notifications/NotificationProvider";
+import NotificationContainer from "./components/notifications/NotificationContainer";
 
 import LoginPage from "./components/auth/login-page";
 import SignupPage from "./components/auth/signup-page";
@@ -60,10 +62,11 @@ function App() {
   const { user, isUserLoggedIn, login, logout } = useUserSession();
 
   return (
-    //  <UserSessionProvider>
-    <BrowserRouter>
-      <div className="app">
-        <Routes>
+    <NotificationProvider>
+      <BrowserRouter>
+        <div className="app">
+          <NotificationContainer />
+          <Routes>
           {/* Admin Panel Routes (Unchanged) */}
           <Route
             path="/Adminpanel"
@@ -272,9 +275,9 @@ function App() {
             }
           />
         </Routes>
-      </div>
-    </BrowserRouter>
-    // </UserSessionProvider>
+        </div>
+      </BrowserRouter>
+    </NotificationProvider>
   );
 }
 

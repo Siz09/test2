@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import "../../styles/Header.css"
 import { useUserSession } from "../../context/UserSessionContext";
+import { useNotifications } from "../notifications/NotificationProvider";
 
 
 
@@ -139,6 +140,7 @@ const globalSearchData = {
 export default function Header({ hasNotifications = true, isLoggedIn = false, user = null, onLogout }) {
   // Always call hooks at the top
   const { user: sessionUser, isUserLoggedIn, logout, loading } = useUserSession();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
   // State management
   const [recentSearches, setRecentSearches] = useState(["Grand Ballroom", "Wedding Planning", "Conference Room"])
@@ -148,7 +150,8 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
   const [searchDropdownOpen, setSearchDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   
- 
+  // Get recent notifications for dropdown
+  const recentNotifications = notifications.slice(0, 5);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -211,6 +214,21 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
     // Replace with your navigation method
     window.location.href = path
     setIsMobileMenuOpen(false)
+  }
+
+  const handleNotificationClick = (notification) => {
+    if (!notification.read) {
+      markAsRead(notification.id);
+    }
+    // Navigate to relevant page based on notification type
+    if (notification.message.includes('booking')) {
+      handleNavigation('/user-profile'); // or bookings page
+    }
+    setNotificationDropdownOpen(false);
+  }
+
+  const handleMarkAllAsRead = () => {
+    markAllAsRead();
   }
 
   // Search functionality
@@ -430,23 +448,33 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
                 onClick={() => setNotificationDropdownOpen(!notificationDropdownOpen)}
               >
                 <BellIcon />
-                {hasNotifications && <div className="notification-badge"></div>}
+                {unreadCount > 0 && <div className="notification-badge"></div>}
               </button>
               <div className={`notification-dropdown ${notificationDropdownOpen ? "active" : ""}`}>
                 <div className="notification-header">
                   <h3 className="notification-title">Notifications</h3>
-                  <button className="mark-all-read" onClick={() => console.log("Mark all as read")}>
+                  <button className="mark-all-read" onClick={handleMarkAllAsRead}>
                     Mark all as read
                   </button>
                 </div>
                 <div className="notification-list">
-                  {sampleNotifications.length > 0 ? (
-                    sampleNotifications.map((notification) => (
-                      <div key={notification.id} className="notification-item">
-                        <div className={`notification-dot ${notification.color}`}></div>
+                  {recentNotifications.length > 0 ? (
+                    recentNotifications.map((notification) => (
+                      <div 
+                        key={notification.id || notification.toastId} 
+                        className="notification-item"
+                        onClick={() => handleNotificationClick(notification)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div className={`notification-dot ${notification.type === 'success' ? 'green' : notification.type === 'warning' ? 'orange' : 'blue'}`}></div>
                         <div className="notification-content">
-                          <p className="notification-text">{notification.text}</p>
-                          <p className="notification-time">{notification.time}</p>
+                          <p className="notification-text">{notification.message}</p>
+                          <p className="notification-time">
+                            {notification.timestamp 
+                              ? new Date(notification.timestamp).toLocaleTimeString()
+                              : 'Just now'
+                            }
+                          </p>
                         </div>
                       </div>
                     ))
@@ -455,7 +483,7 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
                   )}
                 </div>
                 <div className="notification-footer">
-                  <button className="view-all-button" onClick={() => console.log("View all notifications")}>
+                  <button className="view-all-button" onClick={() => handleNavigation("/notifications")}>
                     View all notifications
                   </button>
                 </div>
@@ -522,7 +550,7 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
                   >
                     <BellIcon />
                     <span>Notifications</span>
-                    {hasNotifications && <div className="notification-badge"></div>}
+                    {unreadCount > 0 && <div className="notification-badge"></div>}
                   </button>
                   <button className="mobile-action-btn" onClick={() => handleNavigation("/profile")}>
                     <UserIcon />

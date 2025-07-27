@@ -341,6 +341,43 @@ const contactService = {
 
 // Notifications API service
 const notificationService = {
+  // Send notification via REST API (for testing)
+  sendNotification: async (userId, message, type = 'info') => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const response = await api.post("/api/notifications/send", {
+        userId,
+        message,
+        type
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Broadcast notification to all users
+  broadcastNotification: async (message, type = 'info') => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const response = await api.post("/api/notifications/broadcast", {
+        message,
+        type
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   getUserNotifications: async () => {
     try {
       const token = localStorage.getItem('jwtToken');

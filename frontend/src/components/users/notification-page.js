@@ -3,107 +3,30 @@
 import { useState, useEffect } from "react"
 import { notificationService } from "../../services/api"
 import "../../styles/notification-page.css"
+import { useNotifications } from "../notifications/NotificationProvider"
 
 const NotificationsPage = () => {
   const [activeTab, setActiveTab] = useState("all")
-  const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  
+  // Use real-time notifications from context
+  const { 
+    notifications, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead, 
+    clearAllNotifications,
+    isConnected,
+    connectionError 
+  } = useNotifications();
 
   useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        setLoading(true)
-        const response = await notificationService.getUserNotifications()
-        console.log("Notifications fetched:", response)
-        
-        const notificationList = Array.isArray(response) ? response : []
-        setNotifications(notificationList)
-        setError(null)
-      } catch (error) {
-        console.error("Error fetching notifications:", error)
-        
-        // Use mock data if API fails
-        const mockNotifications = [
-          {
-            id: 1,
-            text: "Your booking for grand ballroom has been confirmed",
-            time: "Just now",
-            type: "success",
-            read: false,
-          },
-          {
-            id: 2,
-            text: "Payment of NPR 30,000 has been processed successfully",
-            time: "1 min ago",
-            type: "success",
-            read: false,
-          },
-          {
-            id: 3,
-            text: "Reminder: your event at Grand Ballroom is scheduled for May 25, 2025.",
-            time: "2 min ago",
-            type: "warning",
-            read: false,
-          },
-          {
-            id: 4,
-            text: "Please complete your profile information to improve your recommendations.",
-            time: "3 days ago",
-            type: "warning",
-            read: true,
-          },
-          {
-            id: 5,
-            text: "New venue added in kathmandu. Check them out!",
-            time: "1 week ago",
-            type: "warning",
-            read: true,
-          },
-        ]
-        setNotifications(mockNotifications)
-        setError("Could not connect to notification service. Showing cached notifications.")
-      } finally {
-        setLoading(false)
-      }
+    setLoading(false);
+    if (connectionError) {
+      setError("WebSocket connection failed. Some notifications may not be real-time.");
     }
-
-    fetchNotifications()
-  }, [])
-
-  const markAllAsRead = async () => {
-    try {
-      await notificationService.markAllAsRead()
-      console.log("All notifications marked as read")
-      
-      setNotifications((prev) => prev.map((notification) => ({ ...notification, read: true })))
-    } catch (error) {
-      console.error("Error marking all as read:", error)
-      // Fallback to local state update
-      setNotifications((prev) => prev.map((notification) => ({ ...notification, read: true })))
-    }
-  }
-
-  const markAsRead = async (id) => {
-    try {
-      await notificationService.markAsRead(id)
-      console.log("Notification marked as read:", id)
-      
-      setNotifications((prev) =>
-        prev.map((notification) => (notification.id === id ? { ...notification, read: true } : notification)),
-      )
-    } catch (error) {
-      console.error("Error marking notification as read:", error)
-      // Fallback to local state update
-      setNotifications((prev) =>
-        prev.map((notification) => (notification.id === id ? { ...notification, read: true } : notification)),
-      )
-    }
-  }
-
-  const clearAll = () => {
-    setNotifications([])
-  }
+  }, [connectionError]);
 
   const filteredNotifications = notifications.filter((notification) => {
     if (activeTab === "unread") return !notification.read
@@ -111,7 +34,11 @@ const NotificationsPage = () => {
     return true // 'all' tab
   })
 
-  const unreadCount = notifications.filter((n) => !n.read).length
+  const handleNotificationClick = (notification) => {
+    if (!notification.read) {
+      markAsRead(notification.id);
+    }
+  };
 
   if (loading) {
     return (
@@ -133,7 +60,7 @@ const NotificationsPage = () => {
   return (
     <div className="notifications-container">
       {/* Error Message */}
-      {error && (
+      {(error || connectionError) && (
         <div style={{
           background: '#fff3cd',
           color: '#856404',
@@ -142,7 +69,23 @@ const NotificationsPage = () => {
           borderRadius: '4px',
           border: '1px solid #ffeaa7'
         }}>
-          ⚠️ {error}
+          ⚠️ {error || connectionError}
+        </div>
+      )}
+
+      {/* Connection Status */}
+      {!isConnected && (
+        <div style={{
+          background: '#fef3c7',
+          color: '#92400e',
+          padding: '8px',
+          marginBottom: '16px',
+          borderRadius: '4px',
+          border: '1px solid #fbbf24',
+          fontSize: '14px',
+          textAlign: 'center'
+        }}>
+          🔄 Connecting to real-time notifications...
         </div>
       )}
 
@@ -153,7 +96,7 @@ const NotificationsPage = () => {
           <button onClick={markAllAsRead} disabled={unreadCount === 0} className="mark-all-btn">
             Mark all as read
           </button>
-          <button onClick={clearAll} disabled={notifications.length === 0} className="clear-all-btn">
+          <button onClick={clearAllNotifications} disabled={notifications.length === 0} className="clear-all-btn">
             Clear all
           </button>
         </div>
@@ -195,16 +138,21 @@ const NotificationsPage = () => {
             filteredNotifications.map((notification) => (
               <div
                 key={notification.id}
-                onClick={() => !notification.read && markAsRead(notification.id)}
+                onClick={() => handleNotificationClick(notification)}
                 className={`notification-item ${!notification.read ? "unread" : "read"}`}
               >
-                <div className={`notification-dot ${notification.type}`} />
+                <div className={`notification-dot ${notification.type === 'success' ? 'success' : notification.type === 'warning' ? 'warning' : 'success'}`} />
                 <div className="notification-content">
                   <div className="notification-text-container">
-                    <p className="notification-text">{notification.text}</p>
+                    <p className="notification-text">{notification.message}</p>
                     {!notification.read && <div className="unread-indicator" />}
                   </div>
-                  <p className="notification-time">{notification.time}</p>
+                  <p className="notification-time">
+                    {notification.timestamp 
+                      ? new Date(notification.timestamp).toLocaleString()
+                      : 'Just now'
+                    }
+                  </p>
                 </div>
               </div>
             ))

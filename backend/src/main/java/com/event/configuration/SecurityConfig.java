@@ -43,6 +43,9 @@ public class SecurityConfig {
                     // Allow all GET requests for these endpoints (anonymous access)
                     .requestMatchers(HttpMethod.GET, "/venues", "/proxy/image", "/proxy/image/**","/venues/**","/bookings/**","/bookings").permitAll()
                     
+                    // Allow WebSocket connections
+                    .requestMatchers("/ws/**").permitAll()
+                    
                     // Allow OPTIONS for all (preflight)
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     
@@ -68,6 +71,9 @@ public class SecurityConfig {
                     // Permit auth, users, partners, bookings (if you want anonymous access)
                     .requestMatchers("/auth/**", "/users/**", "/partners/**", "/bookings/**", "/venues/add", "/venues")
                         .permitAll()
+                    
+                    // Allow notification API endpoints
+                    .requestMatchers("/api/notifications/**").permitAll()
                     
                     // All other requests require authentication
                     .anyRequest().authenticated()

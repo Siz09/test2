@@ -10,6 +10,7 @@ import com.event.model.Venue;
 import com.event.repository.AttendeeRepo;
 import com.event.repository.BookingRepo;
 import com.event.repository.VenueRepo;
+import com.event.service.NotificationService;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -33,6 +34,9 @@ public class BookingController {
 	
 	 @Autowired
 	    private AttendeeRepo attendeeRepo;
+	
+	@Autowired
+	private NotificationService notificationService;
 	
 	public BookingController(BookingRepo bookingRepo) {
         this.bookingRepo = bookingRepo;
@@ -62,6 +66,14 @@ public class BookingController {
         booking.setSpecialRequests(dto.getSpecialRequests());
 
         Booking savedBooking = bookingRepo.save(booking);
+        
+        // Send real-time notification to user
+        notificationService.sendBookingConfirmation(
+            attendee.getUser_id(),
+            venue.getVenueName(),
+            dto.getBookedTime().toLocalDate().toString()
+        );
+        
         return ResponseEntity.ok(savedBooking);
     }
 
