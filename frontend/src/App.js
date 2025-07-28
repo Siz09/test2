@@ -1,9 +1,7 @@
 "use client";
 
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useUserSession } from "./context/UserSessionContext";
-import { NotificationProvider } from "./components/notifications/NotificationProvider";
-import NotificationContainer from "./components/notifications/NotificationContainer";
 
 import LoginPage from "./components/auth/login-page";
 import SignupPage from "./components/auth/signup-page";
@@ -33,6 +31,10 @@ import PartnerAddTest from "./components/admin/PartnerAddTest";
 import EditPartner from "./components/admin/EditPartner";
 import EditVenue from "./components/admin/EditVenue";
 
+import UserViewBookings from "./components/users/UserViewBooking";
+
+import PaymentPage from "./components/users/PaymentPage";
+
 
 import "./styles/auth.css";
 import "./App.css";
@@ -58,15 +60,16 @@ import ViewBooking from "./components/admin/ViewBookings";
 import EditBooking from "./components/admin/EditBooking";
 import UserViewVenue from "./components/users/UserViewVenue";
 
+
+
 function App() {
   const { user, isUserLoggedIn, login, logout } = useUserSession();
 
   return (
-    <NotificationProvider>
-      <BrowserRouter>
-        <div className="app">
-          <NotificationContainer />
-          <Routes>
+    //  <UserSessionProvider>
+    <BrowserRouter>
+      <div className="app">
+        <Routes>
           {/* Admin Panel Routes (Unchanged) */}
           <Route
             path="/Adminpanel"
@@ -86,6 +89,8 @@ function App() {
             <Route path="bookings" element={<Booking />} />
             <Route path="notifications" element={<Notification />} />
              <Route path="profile/:userId" element={<Profile />} />
+             
+     
           </Route>
 
           <Route path="/partner/*" element={<PartnerPanel />}>
@@ -98,6 +103,7 @@ function App() {
             <Route path="venues/:id" element={<PartnerViewVenue />} />
             <Route path="notifications" element={<PartnerNotification />} />
             <Route path="profile" element={<PartnerProfile />} />
+          
           </Route>
 
           {/* User Routes with Session Header/Footer */}
@@ -149,6 +155,19 @@ function App() {
               </>
             }
           />
+          <Route
+            path="/bookings"
+            element={
+              <>
+                <Header isLoggedIn={isUserLoggedIn} user={user} onLogout={logout} hasNotifications={true} />
+                <div className="page-content">
+                  <UserViewBookings />
+                </div>
+                <Footer />
+              </>
+            }
+          />
+
           <Route
             path="/user-profile"
             element={
@@ -274,11 +293,22 @@ function App() {
               </div>
             }
           />
+ 
+  <Route path="payment" element={<PaymentPageWrapper />} />
         </Routes>
-        </div>
-      </BrowserRouter>
-    </NotificationProvider>
+                 
+      </div>
+    </BrowserRouter>
+    // </UserSessionProvider>
   );
+}
+
+// PaymentPage wrapper to extract bookingData from location state
+function PaymentPageWrapper() {
+  const location = useLocation();
+  const bookingData = location.state?.bookingData || {};
+  const onBack = location.state?.onBack;
+  return <PaymentPage bookingData={bookingData} onBack={onBack} />;
 }
 
 export default App;

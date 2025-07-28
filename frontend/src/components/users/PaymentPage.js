@@ -1,11 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import "../styles/venue-booking.css"
-import "../styles/payment-page.css"
-import "../styles/modern-components.css"
+import "../../styles/venue-booking.css"
+import "../../styles/payment-page.css"
+import "../../styles/modern-components.css"
+import { useLocation } from "react-router-dom";
 
-const PaymentPage = ({ bookingData, onBack }) => {
+const PaymentPage = (props) => {
+  const location = useLocation();
+  // Prefer prop, fallback to router state
+  const bookingData = props.bookingData || location.state?.bookingData || {};
+  const onBack = props.onBack || location.state?.onBack;
   const [paymentMethod, setPaymentMethod] = useState("credit-card")
   const [paymentForm, setPaymentForm] = useState({
     nameOnCard: "",

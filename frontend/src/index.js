@@ -1,16 +1,20 @@
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import './index.css';
+
 import { UserSessionProvider } from "./context/UserSessionContext";
-import { NotificationsProvider } from "./context/NotificationContext";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+// Create React Query client instance
+const queryClient = new QueryClient();
 
 console.log("Starting application");
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <UserSessionProvider>
-    <NotificationsProvider>
+    <QueryClientProvider client={queryClient}>
       <App />
-    </NotificationsProvider>
+    </QueryClientProvider>
   </UserSessionProvider>
 );

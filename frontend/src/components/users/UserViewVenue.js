@@ -225,6 +225,7 @@ const UserViewVenue = () => {
                   <span className="uvv-booking__price-unit">/hour</span>
                 </div>
               </div>
+              
 
               <div className="uvv-booking__content">
                 <p className="uvv-booking__description">Ready to book this amazing venue for your event?</p>
