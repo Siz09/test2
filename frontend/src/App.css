@@ -1,23 +1,27 @@
+@import './styles/variables.css';
+
 .app-container {
   display: flex;
-  font-family: Arial, sans-serif;
+  font-family: var(--font-family-primary);
 }
 
 .sidebar {
   width: 220px;
-  background: #f7f7f7;
-  padding: 24px 16px;
+  background: var(--gray-100);
+  padding: var(--spacing-lg) var(--spacing-md);
   min-height: 100vh;
 }
 
 .sidebar h2 {
-  margin-bottom: 24px;
+  margin-bottom: var(--spacing-lg);
+  color: var(--gray-900);
+  font-weight: var(--font-weight-semibold);
 }
 
 .sidebar-section {
-  font-size: 14px;
-  color: #888;
-  margin-bottom: 12px;
+  font-size: var(--font-size-sm);
+  color: var(--gray-500);
+  margin-bottom: var(--spacing-sm);
 }
 
 .sidebar ul {
@@ -26,115 +30,138 @@
 }
 
 .sidebar li {
-  padding: 10px 0;
+  padding: var(--spacing-sm) 0;
   cursor: pointer;
+  transition: color var(--transition-fast);
 }
 
 .sidebar li.active {
-  font-weight: bold;
-  color: #333;
+  font-weight: var(--font-weight-bold);
+  color: var(--gray-800);
 }
 
 .dashboard {
   flex: 1;
-  padding: 32px;
+  padding: var(--spacing-xl);
 }
 
 .breadcrumb {
-  color: #888;
-  font-size: 14px;
-  margin-bottom: 8px;
+  color: var(--gray-500);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-sm);
 }
 
 .stats-row {
   display: flex;
-  gap: 24px;
-  margin: 24px 0;
+  gap: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
 }
 
 .stat-card {
-  background: #fff;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 24px;
+  background: var(--secondary-color);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
   min-width: 120px;
   text-align: center;
+  transition: all var(--transition-normal);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .stat-label {
-  color: #888;
-  font-size: 16px;
+  color: var(--gray-500);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
 }
 
 .stat-value {
-  font-size: 28px;
-  font-weight: bold;
-  margin-top: 8px;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  margin-top: var(--spacing-sm);
+  color: var(--gray-900);
 }
 
 .tabs {
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-md);
 }
 
 .tabs button {
-  padding: 10px 25px;
-  margin-right: 10px;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  margin-right: var(--spacing-sm);
   border: none;
   background: transparent;
-  border-radius: 25px;
+  border-radius: var(--radius-full);
   cursor: pointer;
-  font-weight: 600;
-  color: #333;
-  transition: all 0.3s ease;
+  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-family-primary);
+  color: var(--gray-800);
+  transition: all var(--transition-normal);
 }
 
 .tabs button:hover,
 .tabs button.active {
-  background-color: #ffc107;
-  color: #000;
+  background-color: var(--primary-color);
+  color: var(--accent-color);
 }
 
 .tabs button.active {
-  background-color: #ffc107;
-  color: #000;
-  border-bottom: 2px solid #ffc107;
+  background-color: var(--primary-color);
+  color: var(--accent-color);
+  border-bottom: 2px solid var(--primary-color);
 }
 
 .partner-requests {
-  background: #fff;
-  border-radius: 8px;
-  padding: 24px;
-  margin-top: 16px;
-  border: 1px solid #eee;
+  background: var(--secondary-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-top: var(--spacing-md);
+  border: 1px solid var(--gray-200);
 }
 
 .request-card {
-  margin-top: 16px;
-  padding: 16px;
-  border: 1px solid #eee;
-  border-radius: 6px;
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
 }
 
 .request-actions {
-  margin-top: 12px;
+  margin-top: var(--spacing-sm);
 }
 
 .request-actions button {
-  padding: 6px 16px;
-  margin-right: 8px;
+  padding: var(--spacing-xs) var(--spacing-md);
+  margin-right: var(--spacing-sm);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family-primary);
   cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
 .request-actions .reject {
-  background: #eee;
-  color: #333;
+  background: var(--gray-200);
+  color: var(--gray-800);
+}
+
+.request-actions .reject:hover {
+  background: var(--gray-300);
+  transform: translateY(-1px);
 }
 
 .request-actions .approve {
-  background: #222;
-  color: #fff;
+  background: var(--accent-color);
+  color: var(--secondary-color);
+}
+
+.request-actions .approve:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Add this to your App.css or create a separate file */
@@ -142,14 +169,14 @@
 
 .notifications-page-wrapper {
   padding-top: 100px !important; /* Account for fixed header */
-  background-color: #f8f9fa;
+  background-color: var(--gray-50);
   min-height: calc(100vh - 100px);
 }
 
 /* Ensure the notifications component fits well */
 .notifications-page-wrapper .notifications-container {
-  background-color: #f8f9fa;
-  padding: 40px 24px;
+  background-color: var(--gray-50);
+  padding: var(--spacing-2xl) var(--spacing-lg);
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -161,6 +188,6 @@
   }
 
   .notifications-page-wrapper .notifications-container {
-    padding: 20px 16px;
+    padding: var(--spacing-md) var(--spacing-md);
   }
 }

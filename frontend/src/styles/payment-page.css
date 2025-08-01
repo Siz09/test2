@@ -1,24 +1,24 @@
 /* Payment Page Styles */
 .venue-payment-hero {
-  background: #f9fafb;
-  padding: 3rem 0;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--gray-50);
+  padding: var(--spacing-2xl) 0;
+  border-bottom: 1px solid var(--gray-200);
 }
 
 .venue-payment-title {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #1f2937;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--gray-900);
   margin: 0;
 }
 
 .venue-payment-grid {
   display: grid;
   grid-template-columns: 1fr 400px;
-  gap: 3rem;
+  gap: var(--spacing-2xl);
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: var(--spacing-xl) var(--spacing-md);
 }
 
 .venue-payment-section {
@@ -26,10 +26,10 @@
 }
 
 .venue-payment-card {
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  padding: 2rem;
+  background: var(--secondary-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-xl);
 }
 
 .venue-payment-method-section {
@@ -37,15 +37,15 @@
 }
 
 .venue-payment-section-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--gray-900);
+  margin-bottom: var(--spacing-sm);
 }
 
 .venue-payment-section-subtitle {
-  color: #6b7280;
-  margin-bottom: 1.5rem;
+  color: var(--gray-500);
+  margin-bottom: var(--spacing-lg);
 }
 
 .venue-payment-methods {
@@ -116,26 +116,29 @@
 
 .venue-payment-btn {
   width: 100%;
-  background: #000;
-  color: white;
+  background: var(--accent-color);
+  color: var(--secondary-color);
   border: none;
-  padding: 1rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  font-size: 1rem;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-primary);
   cursor: pointer;
-  transition: background-color 0.2s;
-  margin-top: 2rem;
+  transition: all var(--transition-fast);
+  margin-top: var(--spacing-xl);
   position: relative;
   overflow: hidden;
 }
 
 .venue-payment-btn:hover:not(:disabled) {
-  background: #374151;
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .venue-payment-btn:disabled {
-  background: #9ca3af;
+  background: var(--gray-400);
   cursor: not-allowed;
 }
 
