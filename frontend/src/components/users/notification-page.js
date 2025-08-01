@@ -2,7 +2,24 @@
 
 import { useState, useEffect } from "react"
 import { notificationService } from "../../services/api"
+import { jwtDecode } from "jwt-decode"
+import dayjs from "dayjs"
+import relativeTime from "dayjs/plugin/relativeTime"
+
 import "../../styles/notification-page.css"
+
+dayjs.extend(relativeTime)
+
+// Transform backend notification object to frontend shape
+const transformNotification = (notif) => {
+  return {
+    id: notif.id,
+    text: notif.message || notif.title || "No message",
+    type: notif.type ? notif.type.toLowerCase() : "info",
+    read: notif.status === "READ" || notif.readAt !== null,
+    time: notif.createdAt ? dayjs(notif.createdAt).fromNow() : "Unknown time",
+  }
+}
 
 const NotificationsPage = () => {
   const [activeTab, setActiveTab] = useState("all")
@@ -10,19 +27,41 @@ const NotificationsPage = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  // Decode userId from JWT token stored in localStorage
+  const getUserIdFromToken = () => {
+    const token = localStorage.getItem("jwtToken")
+    if (!token) return null
+    try {
+      const decoded = jwtDecode(token)
+      return decoded.userId || decoded.id || decoded.sub // adjust based on your token structure
+    } catch {
+      return null
+    }
+  }
+
   useEffect(() => {
+    const userId = getUserIdFromToken()
+    if (!userId) {
+      setError("User not authenticated")
+      setLoading(false)
+      return
+    }
+
     const fetchNotifications = async () => {
       try {
         setLoading(true)
-        const response = await notificationService.getUserNotifications()
+        const response = await notificationService.getUserNotifications(userId)
         console.log("Notifications fetched:", response)
-        
-        const notificationList = Array.isArray(response) ? response : []
+
+        const notificationList = Array.isArray(response)
+          ? response.map(transformNotification)
+          : []
+
         setNotifications(notificationList)
         setError(null)
       } catch (error) {
         console.error("Error fetching notifications:", error)
-        
+
         // Use mock data if API fails
         const mockNotifications = [
           {
@@ -75,11 +114,10 @@ const NotificationsPage = () => {
     try {
       await notificationService.markAllAsRead()
       console.log("All notifications marked as read")
-      
+
       setNotifications((prev) => prev.map((notification) => ({ ...notification, read: true })))
     } catch (error) {
       console.error("Error marking all as read:", error)
-      // Fallback to local state update
       setNotifications((prev) => prev.map((notification) => ({ ...notification, read: true })))
     }
   }
@@ -88,13 +126,12 @@ const NotificationsPage = () => {
     try {
       await notificationService.markAsRead(id)
       console.log("Notification marked as read:", id)
-      
+
       setNotifications((prev) =>
         prev.map((notification) => (notification.id === id ? { ...notification, read: true } : notification)),
       )
     } catch (error) {
       console.error("Error marking notification as read:", error)
-      // Fallback to local state update
       setNotifications((prev) =>
         prev.map((notification) => (notification.id === id ? { ...notification, read: true } : notification)),
       )
@@ -108,7 +145,7 @@ const NotificationsPage = () => {
   const filteredNotifications = notifications.filter((notification) => {
     if (activeTab === "unread") return !notification.read
     if (activeTab === "read") return notification.read
-    return true // 'all' tab
+    return true
   })
 
   const unreadCount = notifications.filter((n) => !n.read).length
@@ -116,14 +153,16 @@ const NotificationsPage = () => {
   if (loading) {
     return (
       <div className="notifications-container">
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '300px',
-          fontSize: '18px',
-          color: '#666'
-        }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "300px",
+            fontSize: "18px",
+            color: "#666",
+          }}
+        >
           Loading notifications...
         </div>
       </div>
@@ -132,21 +171,21 @@ const NotificationsPage = () => {
 
   return (
     <div className="notifications-container">
-      {/* Error Message */}
       {error && (
-        <div style={{
-          background: '#fff3cd',
-          color: '#856404',
-          padding: '12px',
-          marginBottom: '20px',
-          borderRadius: '4px',
-          border: '1px solid #ffeaa7'
-        }}>
+        <div
+          style={{
+            background: "#fff3cd",
+            color: "#856404",
+            padding: "12px",
+            marginBottom: "20px",
+            borderRadius: "4px",
+            border: "1px solid #ffeaa7",
+          }}
+        >
           ⚠️ {error}
         </div>
       )}
 
-      {/* Header */}
       <div className="header">
         <h1 className="title">Notifications</h1>
         <div className="header-buttons">
@@ -159,7 +198,6 @@ const NotificationsPage = () => {
         </div>
       </div>
 
-      {/* Tab Navigation */}
       <div className="tab-navigation">
         <button onClick={() => setActiveTab("all")} className={`tab-button ${activeTab === "all" ? "active" : ""}`}>
           All notifications
@@ -180,7 +218,6 @@ const NotificationsPage = () => {
         </button>
       </div>
 
-      {/* Notifications Card */}
       <div className="notifications-card">
         <div className="card-header">
           <h2 className="card-title">Your Notifications</h2>

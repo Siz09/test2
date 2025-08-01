@@ -1,5 +1,6 @@
 package com.event.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -37,6 +38,8 @@ public class Booking {
 	    private int duration;
 	    private int guests;
 	    private String specialRequests;
+	    private BigDecimal amount;
+	    
 
 
 
@@ -104,6 +107,14 @@ public class Booking {
 
 		public void setAttendee(Attendee attendee) {
 			this.attendee = attendee;
+		}
+
+		public BigDecimal getAmount() {
+			return amount;
+		}
+
+		public void setAmount(BigDecimal amount) {
+			this.amount = amount;
 		}
 		
 		

@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,13 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.event.dto.UserAddDTO;
 import com.event.model.Partner;
-import com.event.model.User;
-import com.event.model.Venue;
 import com.event.repository.PartnerRepo;
-import com.event.repository.UserRepo;
-import com.event.repository.VenueRepo;
-
-import org.springframework.ui.Model;
 
 @RequestMapping("admin/partners")
 @RestController
@@ -33,12 +28,14 @@ public class PartnerController {
 	@Autowired
 	private PartnerRepo partnerRepo;
 	    
-	    
+	@Autowired
+	private BCryptPasswordEncoder passwordEncoder;
 	  
 	@GetMapping
 	public List<UserAddDTO> listPartners() {
 	    List<Partner> partners = partnerRepo.findAll();
 	    return partners.stream().map(partner -> {
+	    	
 	        UserAddDTO dto = new UserAddDTO();
 	        dto.setUser_id(partner.getUser_id());
 	        dto.setFullname(partner.getFullname());
@@ -51,14 +48,25 @@ public class PartnerController {
 	        dto.setStatus(partner.getStatus());
 	        return dto;
 	    }).collect(Collectors.toList());
+	    
+	    
 	}
 
 	    
-	    @PostMapping("/new")  
-	    public Partner savePartner(@RequestBody Partner partner) {
-	      return  partnerRepo.save(partner);
+	@PostMapping("/new")
+	public ResponseEntity<String> savePartner(@RequestBody Partner partner) {
+	    try {
+	        // Encode the password before saving
+	        String encodedPassword = passwordEncoder.encode(partner.getPassword());
+	        partner.setPassword(encodedPassword);
+
+	        partnerRepo.save(partner);
+	        return ResponseEntity.ok("Partner added successfully");
+	    } catch (Exception e) {
+	        return ResponseEntity.status(500).body("Error adding partner: " + e.getMessage());
 	    }
-	    
+	}
+
 	    
 	    @DeleteMapping("/delete/{userId}")
 	    public ResponseEntity<Void> deletePartner(@PathVariable Long userId) {

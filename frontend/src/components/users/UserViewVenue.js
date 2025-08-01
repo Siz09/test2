@@ -252,7 +252,7 @@ const UserViewVenue = () => {
         </div>
       </div>
 
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 };

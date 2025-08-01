@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import VenueGrid from "./VenueGrid";
 import { venueService, imageService } from "../../services/api";
+import { useNavigate } from "react-router-dom";
 const BrowseByCategory = ({ propVenues }) => {
+  const navigate = useNavigate();
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -130,6 +132,7 @@ const BrowseByCategory = ({ propVenues }) => {
         totalPages={Math.ceil(venues.length / 4) || 1}
         onPageChange={handlePageChange}
         venueType="default"
+        onViewAll={() => navigate("/venues")}
       />
     </>
   );

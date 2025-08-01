@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Lock, AlertCircle, CheckCircle, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Lock, AlertCircle, CheckCircle, Eye, EyeOff, ArrowLeft,Mail } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthCard from "./auth-card";
 import { authService } from "../../services/api";
+
 
 // Animation variants
 const formControlVariants = {
@@ -26,20 +27,22 @@ const buttonVariants = {
   hover: { scale: 1.03 },
   tap: { scale: 0.97 },
 };
-
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
+    email: "", // Added email field
     otpCode: "",
     password: "",
     confirmPassword: "",
   });
   const [errors, setErrors] = useState({
+    email: "",
     otpCode: "",
     password: "",
     confirmPassword: "",
   });
   const [touched, setTouched] = useState({
+    email: false,
     otpCode: false,
     password: false,
     confirmPassword: false,
@@ -50,11 +53,29 @@ export default function ResetPasswordPage() {
   const [apiError, setApiError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  // Load email from localStorage when component mounts
+  useEffect(() => {
+    const storedEmail = localStorage.getItem("resetEmail");
+    if (storedEmail) {
+      setFormData(prev => ({ ...prev, email: storedEmail }));
+    }
+  }, []);
 
   // Define validateForm as a useCallback to avoid dependency issues
   const validateForm = useCallback(() => {
     const newErrors = {};
     let isValid = true;
+
+    // Email validation
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+      isValid = false;
+    } else {
+      newErrors.email = "";
+    }
 
     // OTP Code validation
     if (!formData.otpCode) {
@@ -98,25 +119,20 @@ export default function ResetPasswordPage() {
     validateForm();
   }, [validateForm]);
 
+  // FIXED: Removed duplicate setFormData call
   const handleChange = (e) => {
     const { name, value } = e.target;
     
+    let processedValue = value;
+    
     // For OTP code, only allow numeric input and limit to 6 digits
     if (name === "otpCode") {
-      const numericValue = value.replace(/\D/g, "").slice(0, 6);
-      setFormData({
-        ...formData,
-        [name]: numericValue,
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
+      processedValue = value.replace(/\D/g, "").slice(0, 6);
     }
+    
     setFormData({
       ...formData,
-      [name]: value,
+      [name]: processedValue,
     });
 
     if (apiError) {
@@ -137,7 +153,12 @@ export default function ResetPasswordPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setTouched({ otpCode: true, password: true, confirmPassword: true });
+    setTouched({ 
+      email: true, 
+      otpCode: true, 
+      password: true, 
+      confirmPassword: true 
+    });
 
     if (!validateForm()) return;
 
@@ -146,13 +167,25 @@ export default function ResetPasswordPage() {
     setSuccessMessage("");
 
     try {
-      await authService.resetPassword(formData.otpCode, formData.password);
+      // Updated to pass email, otpCode, and password to match backend
+      await authService.resetPassword(formData.email, formData.otpCode, formData.password);
       
       setSuccessMessage("Your password has been successfully reset! Redirecting to login...");
       
-      // Clear the form
-      setFormData({ otpCode: "", password: "", confirmPassword: "" });
-      setTouched({ otpCode: false, password: false, confirmPassword: false });
+      // Clear the form and localStorage
+      setFormData({ 
+        email: "", 
+        otpCode: "", 
+        password: "", 
+        confirmPassword: "" 
+      });
+      setTouched({ 
+        email: false, 
+        otpCode: false, 
+        password: false, 
+        confirmPassword: false 
+      });
+      localStorage.removeItem("resetEmail");
       
       // Redirect to login after 3 seconds
       setTimeout(() => {
@@ -166,7 +199,7 @@ export default function ResetPasswordPage() {
         if (error.response.status === 400) {
           setApiError("Invalid or expired OTP code. Please request a new password reset.");
         } else if (error.response.status === 404) {
-          setApiError("OTP code not found. Please request a new password reset.");
+          setApiError("User not found. Please check your email address.");
         } else if (error.response.data?.message) {
           setApiError(error.response.data.message);
         } else {
@@ -181,13 +214,14 @@ export default function ResetPasswordPage() {
   };
 
   const handleBackToLogin = () => {
+    localStorage.removeItem("resetEmail");
     navigate("/login");
   };
 
   const handleRequestNewReset = () => {
+    localStorage.removeItem("resetEmail");
     navigate("/forgot-password");
   };
-
 
   return (
     <AuthCard
@@ -226,6 +260,62 @@ export default function ResetPasswordPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Email field */}
+        <motion.div
+          className="form-group"
+          variants={formControlVariants}
+          initial="hidden"
+          animate="visible"
+          custom={0}
+        >
+          <label htmlFor="email" className={touched.email && errors.email ? "text-error" : ""}>
+            Email Address <span className="required">*</span>
+          </label>
+          <div className={`input-container ${touched.email && errors.email ? "input-error" : ""}`}>
+            <motion.input
+              whileFocus={{ scale: 1.01 }}
+              transition={{ duration: 0.2 }}
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Enter your email address"
+              value={formData.email}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className={touched.email && !errors.email ? "input-valid" : ""}
+              required
+              disabled={isSubmitting}
+              autoComplete="email"
+            />
+            <Mail className="input-icon" size={20} />
+            <AnimatePresence>
+              {touched.email && !errors.email && formData.email && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <CheckCircle className="valid-icon" size={16} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          <AnimatePresence>
+            {touched.email && errors.email && (
+              <motion.p
+                className="error-message"
+                initial={{ opacity: 0, y: -10, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: "auto" }}
+                exit={{ opacity: 0, y: -10, height: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {errors.email}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         <motion.div
           className="form-group"
@@ -283,6 +373,7 @@ export default function ResetPasswordPage() {
             )}
           </AnimatePresence>
         </motion.div>
+
         <motion.div
           className="form-group"
           variants={formControlVariants}
@@ -413,14 +504,14 @@ export default function ResetPasswordPage() {
           custom={4}
         >
           <p className="form-help-text">
-            Enter the 6-digit OTP code sent to your email along with your new password. Your password must be at least 8 characters long.
+            Enter your email address and the 6-digit OTP code sent to your email along with your new password. Your password must be at least 8 characters long.
           </p>
         </motion.div>
 
         <motion.button
           className={`auth-button primary-button ${isSubmitting ? "button-loading" : ""}`}
           type="submit"
-          disabled={isSubmitting || !formData.otpCode || !formData.password || !formData.confirmPassword}
+          disabled={isSubmitting || !formData.email || !formData.otpCode || !formData.password || !formData.confirmPassword}
           variants={buttonVariants}
           initial="idle"
           whileHover="hover"

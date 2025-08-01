@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { partnerService } from '../../services/api';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const PartnerAddTest = () => {
   const navigate = useNavigate();
@@ -8,24 +10,64 @@ const PartnerAddTest = () => {
     company: '',
     fullname: '',
     email: '',
-    contact: '',
+    phoneNumber: '',
+    role:"PARTNER",
     venue: '',
     status: '',
+    password: '',
+    confirmPassword: '',
   });
-  const [panCardImage, setPanCardImage] = useState(null);
-  const [businessDocument, setBusinessDocument] = useState(null);
+  const [panCardImage, setPanCardImage] = useState(null); // will hold base64 string
+  const [businessDocument, setBusinessDocument] = useState(null); // base64 string
   const [sendEmail, setSendEmail] = useState(false);
   const [accountActive, setAccountActive] = useState(true);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
 
+  // Utility: Convert file to base64 string
+  const fileToBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    // Phone number: only allow digits, max 10
+    if (name === 'phoneNumber') {
+      let val = value.replace(/\D/g, '');
+      if (val.length > 10) val = val.slice(0, 10);
+      setFormData(prevData => ({ ...prevData, [name]: val }));
+    } else {
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: value,
+      }));
+    }
+  };
+
+  // Handle file inputs converting to base64
+  const handleFileChange = async (e, setter) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const base64 = await fileToBase64(file);
+        setter(base64);
+      } catch {
+        setter(null);
+      }
+    } else {
+      setter(null);
+    }
+  };
+
+  // Password validation function
+  const isStrongPassword = (pwd) => {
+    // At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/.test(pwd);
   };
 
   const validate = () => {
@@ -37,6 +79,15 @@ const PartnerAddTest = () => {
     });
     if (!panCardImage) newErrors.panCardImage = 'PAN card image is required';
     if (!businessDocument) newErrors.businessDocument = 'Business document is required';
+    if (formData.phoneNumber && formData.phoneNumber.length !== 10) {
+      newErrors.phoneNumber = 'Phone number must be 10 digits';
+    }
+    if (formData.password && !isStrongPassword(formData.password)) {
+      newErrors.password = 'Password must be at least 8 characters, include uppercase, lowercase, number, and special character';
+    }
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -47,32 +98,36 @@ const PartnerAddTest = () => {
       setIsSubmitting(true);
       setApiError("");
       try {
-        // Prepare form data for file upload
-        const data = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
-          data.append(key, value);
-        });
-        data.append('panCardImage', panCardImage);
-        data.append('businessDocument', businessDocument);
-        data.append('sendWelcomeEmail', sendEmail);
-        data.append('status', accountActive ? 'Active' : 'Inactive');
-        const response = await partnerService.addPartner(data);
-        console.log("Partner added successfully:", response);
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        alert("Partner added successfully!");
+        const data = {
+          ...formData,
+          panCardImage, // base64 string
+          businessDocument, // base64 string
+          sendWelcomeEmail: sendEmail,
+           role:"PARTNER",
+          status: accountActive ? 'Active' : 'Inactive',
+          joinDate: new Date().toISOString(),
+        };
+        // Replace partnerService.addPartner to accept JSON
+        const response = await partnerService.addPartner(data); 
+        toast.success('Partner added successfully!');
+        setTimeout(() => {
+          navigate('/admin/partners');
+        }, 1500);
         setFormData({
           company: '',
           fullname: '',
           email: '',
-          contact: '',
+          phoneNumber: '',
           venue: '',
           status: '',
+          password: '',
+          confirmPassword: '',
+           role:"PARTNER",
         });
         setPanCardImage(null);
         setBusinessDocument(null);
         setSendEmail(false);
         setAccountActive(true);
-        navigate('/admin/partners');
       } catch (error) {
         console.error("Partner add failed:", error);
         if (error.response) {
@@ -91,6 +146,8 @@ const PartnerAddTest = () => {
       }
     }
   };
+
+  
 
   return (
     <div className="add-user-container" style={{ maxWidth: 700, margin: '2rem auto', background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.07)', padding: 32 }}>
@@ -131,17 +188,20 @@ const PartnerAddTest = () => {
           {errors.email && <span className="error-message" style={{ color: 'red' }}>{errors.email}</span>}
         </div>
         <div className="form-group">
-          <label htmlFor="contact">Phone Number</label>
+          <label htmlFor="phoneNumber">Phone Number</label>
           <input
             type="text"
-            id="contact"
-            name="contact"
+            id="phoneNumber"
+            name="phoneNumber"
             placeholder="Enter phone number"
-            value={formData.contact}
+            value={formData.phoneNumber}
             onChange={handleChange}
-            className={errors.contact ? 'error' : ''}
+            className={errors.phoneNumber ? 'error' : ''}
+            maxLength={10}
+            inputMode="numeric"
+            pattern="[0-9]{10}"
           />
-          {errors.contact && <span className="error-message" style={{ color: 'red' }}>{errors.contact}</span>}
+          {errors.phoneNumber && <span className="error-message" style={{ color: 'red' }}>{errors.phoneNumber}</span>}
         </div>
         <hr style={{ margin: '32px 0' }} />
         <div className="form-header" style={{ marginBottom: 24 }}>
@@ -193,7 +253,7 @@ const PartnerAddTest = () => {
             type="file"
             id="panCardImage"
             name="panCardImage"
-            onChange={(e) => setPanCardImage(e.target.files[0])}
+            onChange={e => handleFileChange(e, setPanCardImage)}
             className={errors.panCardImage ? 'error' : ''}
           />
           {errors.panCardImage && <span className="error-message" style={{ color: 'red' }}>{errors.panCardImage}</span>}
@@ -204,7 +264,7 @@ const PartnerAddTest = () => {
             type="file"
             id="businessDocument"
             name="businessDocument"
-            onChange={(e) => setBusinessDocument(e.target.files[0])}
+            onChange={e => handleFileChange(e, setBusinessDocument)}
             className={errors.businessDocument ? 'error' : ''}
           />
           {errors.businessDocument && <span className="error-message" style={{ color: 'red' }}>{errors.businessDocument}</span>}
@@ -216,8 +276,8 @@ const PartnerAddTest = () => {
               type="password"
               id="password"
               name="password"
-              placeholder="Create password (min 8 characters)"
-              value={formData.password || ''}
+              placeholder="Create password (min 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character)"
+              value={formData.password}
               onChange={handleChange}
               className={errors.password ? 'error' : ''}
             />
@@ -230,7 +290,7 @@ const PartnerAddTest = () => {
               id="confirmPassword"
               name="confirmPassword"
               placeholder="Confirm password"
-              value={formData.confirmPassword || ''}
+              value={formData.confirmPassword}
               onChange={handleChange}
               className={errors.confirmPassword ? 'error' : ''}
             />
@@ -264,6 +324,7 @@ const PartnerAddTest = () => {
           </button>
         </div>
       </form>
+      <ToastContainer />
     </div>
   );
 };

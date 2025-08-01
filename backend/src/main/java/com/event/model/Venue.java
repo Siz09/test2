@@ -14,6 +14,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -37,11 +38,15 @@ public class Venue {
 
     private BigDecimal price;
 
+    private String category;
+
     @OneToMany(mappedBy = "venue", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Booking> bookings = new ArrayList<>();
 
     private String status;
     
+    @Lob
+    @Column(columnDefinition = "TEXT")
     private String imageUrl;
     
     private String mapLocationUrl;
@@ -52,6 +57,7 @@ public class Venue {
     private String description;
     @ElementCollection
     private List<String> amenities;
+    
 
     // Getters and setters
 
@@ -179,6 +185,13 @@ public class Venue {
 		this.amenities = amenities;
 	}
     
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
     
     
 }

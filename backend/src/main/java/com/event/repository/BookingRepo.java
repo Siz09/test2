@@ -1,5 +1,6 @@
 package com.event.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,6 +24,11 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
 		
 		@Query("SELECT COUNT(b) FROM Booking b WHERE b.venue.venue_id = :venueId")
 		long countBookingsByVenueId(@Param("venueId") Long venueId);
-
+		
+		@Query("SELECT b FROM Booking b " +
+			       "JOIN FETCH b.venue v " +
+			       "LEFT JOIN FETCH v.partner " +
+			       "WHERE b.attendee.user_id = :userId")
+			List<Booking> findBookingsByUserId(@Param("userId") Long userId);
 	}
 

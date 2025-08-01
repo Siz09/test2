@@ -6,7 +6,6 @@ import { Mail, AlertCircle, CheckCircle, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthCard from "./auth-card";
 import { authService } from "../../services/api";
-
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -30,6 +29,9 @@ export default function ForgotPasswordPage() {
       setSuccessMessage(
         "OTP has been sent to your email. Please check your inbox."
       );
+
+      // Store email in localStorage to pass to reset password page
+      localStorage.setItem("resetEmail", email);
 
       // Redirect to reset password page after a short delay
       setTimeout(() => {

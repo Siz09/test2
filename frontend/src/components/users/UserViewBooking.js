@@ -3,6 +3,22 @@ import { MapPin, Calendar, Eye, Download, X } from "lucide-react";
 import { bookingService } from "../../services/api";
 import Header from "./Header";
 import "../../styles/UserViewBooking.css";
+import { useParams } from "react-router-dom";
+function parseJwt(token) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
 
 export default function UserViewBookings() {
   const [statusFilter, setStatusFilter] = useState("");
@@ -10,12 +26,33 @@ export default function UserViewBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+ const [showBookingDetails, setShowBookingDetails] = useState(false);
+   const [selectedBooking, setSelectedBooking] = useState(null);
 
+  // ✅ Get userId from JWT
+  const token = localStorage.getItem("jwtToken");
+  const decoded = token ? parseJwt(token) : null;
+  const userId = decoded?.userId;
+
+  
   useEffect(() => {
+    if (!userId) {
+      setError("User ID not found in token");
+      setLoading(false);
+      return;
+    }
+
+    console.log("userId from JWT:", userId);
+
     const fetchBookings = async () => {
       try {
-        const response = await bookingService.getUserBookings();
-        setBookings(response);
+        const response = await bookingService.getUserBookings(userId);
+        // response could be undefined/null if 204 No Content
+        if (Array.isArray(response)) {
+          setBookings(response);
+        } else {
+          setBookings([]);  // no bookings case
+        }
       } catch (err) {
         setError("Failed to load bookings");
       } finally {
@@ -23,8 +60,9 @@ export default function UserViewBookings() {
       }
     };
 
+
     fetchBookings();
-  }, []);
+  }, [userId]);
 
   const getStatusBadgeClass = (status) => {
     switch (status) {
@@ -40,42 +78,69 @@ export default function UserViewBookings() {
   };
 
   const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+  if (!dateStr) return "Invalid date";
 
-  const formatTime = (timeStr) => {
-    const time = new Date(`1970-01-01T${timeStr}`);
-    return time.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  const isoDateStr = dateStr.replace(" ", "T");
+  const date = new Date(isoDateStr);
 
-  const filteredBookings = bookings.filter((booking) => {
-    const bookingDate = new Date(booking.date);
-    const now = new Date();
+  if (isNaN(date)) return "Invalid date";
 
-    if (statusFilter && booking.status !== statusFilter) return false;
-
-    if (dateFilter === "upcoming" && bookingDate <= now) return false;
-    if (dateFilter === "past" && bookingDate > now) return false;
-    if (dateFilter === "this-month") {
-      if (
-        bookingDate.getMonth() !== now.getMonth() ||
-        bookingDate.getFullYear() !== now.getFullYear()
-      ) {
-        return false;
-      }
-    }
-
-    return true;
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
+};
+
+const formatTime = (dateStr) => {
+  if (!dateStr) return "Invalid time";
+
+  const isoStr = dateStr.replace(" ", "T");
+  const time = new Date(isoStr);
+
+  if (isNaN(time)) return "Invalid time";
+
+  return time.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+ const handleDelete = async (id) => {
+  console.log("Deleting booking id:", id);
+  try {
+    const response = await bookingService.deleteBooking(id);
+    console.log("Delete response:", response);
+    setBookings(prev => prev.filter(v => v.bookingId !== id));
+    alert("Booking Cancelled Successfully!");
+  } catch (err) {
+    console.error("Failed to delete:", err);
+    alert("Failed to delete booking. Please try again.");
+  }
+}
+
+  const filteredBookings = Array.isArray(bookings)
+  ? bookings.filter((booking) => {
+      const bookingDate = new Date(booking.date);
+      const now = new Date();
+
+      if (statusFilter && booking.status !== statusFilter) return false;
+
+      if (dateFilter === "upcoming" && bookingDate <= now) return false;
+      if (dateFilter === "past" && bookingDate > now) return false;
+      if (dateFilter === "this-month") {
+        if (
+          bookingDate.getMonth() !== now.getMonth() ||
+          bookingDate.getFullYear() !== now.getFullYear()
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    })
+  : [];
+
 
   if (error) {
     return (
@@ -89,82 +154,146 @@ export default function UserViewBookings() {
     );
   }
 
+   const handleViewDetails = (booking) => {
+    setSelectedBooking(booking);
+    console.log("log:",booking);
+    setShowBookingDetails(true);
+  };
+
   return (
     <div className="page-container">
-      <Header />
+  <Header />
 
-      <h1>My Bookings</h1>
-      <p>Track and manage your venue reservations</p>
+  <h1>My Bookings</h1>
+  <p>Track and manage your venue reservations</p>
 
-      <div className="filter-bar">
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="">All Statuses</option>
-          <option value="pending">Pending</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
+  <div className="filter-bar">
+    <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+      <option value="">All Statuses</option>
+      <option value="pending">Pending</option>
+      <option value="confirmed">Confirmed</option>
+      <option value="cancelled">Cancelled</option>
+    </select>
 
-        <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
-          <option value="">All Dates</option>
-          <option value="upcoming">Upcoming</option>
-          <option value="past">Past</option>
-          <option value="this-month">This Month</option>
-        </select>
-      </div>
+    <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
+      <option value="">All Dates</option>
+      <option value="upcoming">Upcoming</option>
+      <option value="past">Past</option>
+      <option value="this-month">This Month</option>
+    </select>
+  </div>
 
-      {loading ? (
-        <p>Loading bookings...</p>
-      ) : filteredBookings.length === 0 ? (
-        <div className="empty-state">
-          <Calendar size={48} />
-          <h3>No bookings found</h3>
-          <p>Try adjusting filters or book a new venue</p>
-          <button onClick={() => { setStatusFilter(""); setDateFilter(""); }}>
-            Clear Filters
-          </button>
-        </div>
-      ) : (
-        <div className="bookings-grid">
-          {filteredBookings.map((booking) => (
-            <div className="booking-card" key={booking.id}>
-              <div className="booking-header">
-                <div>
-                  <h2>{booking.venueName}</h2>
-                  {booking.location && (
-                    <div className="location">
-                      <MapPin size={16} />
-                      <span>{booking.location}</span>
-                    </div>
-                  )}
-                </div>
-                <span className={getStatusBadgeClass(booking.status)}>{booking.status}</span>
+  {loading ? (
+    <p>Loading bookings...</p>
+  ) : filteredBookings.length === 0 ? (
+    <div className="empty-state">
+      <Calendar size={48} />
+      <h3>No bookings found</h3>
+      <p>Try adjusting filters or book a new venue</p>
+      <button onClick={() => {
+        setStatusFilter("");
+        setDateFilter("");
+      }}>
+        Clear Filters
+      </button>
+    </div>
+  ) : (
+    <div className="bookings-grid">
+      {filteredBookings.map((booking) => (
+        <div className="booking-card custom-booking-card" key={booking.id}>
+          <div className="custom-booking-card-content">
+            <div className="custom-booking-card-details">
+              <div className="custom-booking-card-title">{booking.venueName}</div>
+              <div className="custom-booking-card-subtitle">Booking #{booking.bookingId}</div>
+              <div className="custom-booking-card-line">{formatDate(booking.bookedTime)} at {formatTime(booking.bookedTime)}</div>
+              <div className="custom-booking-card-line">Duration: {booking.duration} hrs</div>
+                   <div className="custom-booking-card-line">Location: {booking.venueLocation}</div>
+              <div className="custom-booking-card-line">
+                Guests: {booking.guests|| "N/A"}
               </div>
-
-              <div className="booking-details">
-                <div><strong>Date:</strong> {formatDate(booking.date)}</div>
-                <div><strong>Time:</strong> {formatTime(booking.startTime)}</div>
-                <div><strong>Duration:</strong> {booking.duration} hrs</div>
-                <div><strong>Guests:</strong> {booking.guests}</div>
-              </div>
-
-              <div className="booking-actions">
-                <button onClick={() => console.log("View", booking.id)}>
-                  <Eye size={16} /> View
-                </button>
-                {booking.status === "pending" ? (
-                  <button className="cancel" onClick={() => console.log("Cancel", booking.id)}>
-                    <X size={16} /> Cancel
-                  </button>
-                ) : (
-                  <button onClick={() => console.log("Download", booking.id)}>
-                    <Download size={16} /> Download
-                  </button>
-                )}
+              <div className="custom-booking-card-line custom-booking-card-total">
+                Total: NPR {booking.amount?.toLocaleString() || "-"}
               </div>
             </div>
-          ))}
+            <div className="custom-booking-card-status">
+              {booking.status === "confirmed" && (
+                <span className="custom-status-pill confirmed">Confirmed</span>
+              )}
+              {booking.status === "pending" && (
+                <span className="custom-status-pill pending">Pending</span>
+              )}
+              {booking.status === "cancelled" && (
+                <span className="custom-status-pill cancelled">Cancelled</span>
+              )}
+            </div>
+          </div>
+          <div className="custom-booking-card-actions">
+            <button
+  className="custom-btn-outline"
+ onClick={() => handleDelete(booking.bookingId)}  
+>
+  Cancel
+</button>
+            <button
+              className="profile-booking-btn"
+              onClick={() => {
+                handleViewDetails(booking)
+                setSelectedBooking(booking)
+                setShowBookingDetails(true)
+              }}
+            >
+              View Details
+            </button>
+          </div>
         </div>
-      )}
+      ))}
     </div>
+  )}
+
+  {showBookingDetails && selectedBooking && (
+    <div className="venue-modal-overlay" onClick={() => setShowBookingDetails(false)}>
+      <div className="venue-modal-container" onClick={(e) => e.stopPropagation()}>
+        <div className="venue-modal-header">
+          <h3>{selectedBooking.eventName}</h3>
+          <button className="venue-modal-close" onClick={() => setShowBookingDetails(false)}>
+          </button>
+        </div>
+        <div className="venue-modal-body">
+          <div className="profile-booking-details-modal">
+            <div className="profile-modal-detail-item">
+              <span>Venue:</span>
+              <span>{selectedBooking.venueName}</span>
+            </div>
+            <div className="profile-modal-detail-item">
+              <span>Date and Time:</span>
+              <span>{formatDate(selectedBooking.bookedTime)}</span>
+            </div>
+            <div className="profile-modal-detail-item">
+              <span>Duration:</span>
+              <span>{selectedBooking.duration} hours</span>
+            </div>
+            <div className="profile-modal-detail-item">
+              <span>Guests:</span>
+              <span>{selectedBooking.guests}</span>
+            </div>
+            <div className="profile-modal-detail-item">
+              <span>Location:</span>
+              <span>{selectedBooking.venueLocation}</span>
+            </div>
+            <div className="profile-modal-detail-item profile-modal-total">
+              <span>Total Amount:</span>
+              <span>NPR {selectedBooking.amount?.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+        <div className="venue-modal-actions">
+          <button className="venue-modal-btn-primary" onClick={() => setShowBookingDetails(false)}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+</div>
   );
 }

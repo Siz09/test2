@@ -32,7 +32,7 @@ const AdminPanel = () => {
     { path: '/admin/notifications', icon: <FiBell />, label: 'Notifications' },
     { path: '/admin/settings', icon: <FiSettings />, label: 'Settings' },
    currentUser && {
-  path: `/admin/profile/${currentUser.user_id}`,
+  path: `/admin/profile/`,
   icon: <FiUser />,
 
   label: 'Profile',

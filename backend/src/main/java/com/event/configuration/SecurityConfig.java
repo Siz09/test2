@@ -4,6 +4,7 @@ package com.event.configuration;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,9 +12,13 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -41,10 +46,10 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
                     // Allow all GET requests for these endpoints (anonymous access)
-                    .requestMatchers(HttpMethod.GET, "/venues", "/proxy/image", "/proxy/image/**","/venues/**","/bookings/**","/bookings").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/venues", "/proxy/image", "/proxy/image/**","/venues/**",
+                    		"/bookings/**","/bookings","/api/stats","/auth/test-email","/notiifications","/notifications/**").permitAll()
                     
-                    // Allow WebSocket connections
-                    .requestMatchers("/ws/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/auth/forgot-password").permitAll()
                     
                     // Allow OPTIONS for all (preflight)
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -59,7 +64,7 @@ public class SecurityConfig {
                     .requestMatchers("/venues/new", "/venues/add")
                         .hasAnyRole("ADMIN", "PARTNER")
                     
-                    .requestMatchers("/user/**")
+                    .requestMatchers("/user/**","/user-profile")
                         .hasRole("ATTENDEE")
                     
                     .requestMatchers("/admin/**")
@@ -72,12 +77,17 @@ public class SecurityConfig {
                     .requestMatchers("/auth/**", "/users/**", "/partners/**", "/bookings/**", "/venues/add", "/venues")
                         .permitAll()
                     
-                    // Allow notification API endpoints
-                    .requestMatchers("/api/notifications/**").permitAll()
-                    
                     // All other requests require authentication
                     .anyRequest().authenticated()
-                )
+            		)
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                .sessionFixation(fixation -> fixation.migrateSession())
+                .maximumSessions(1)
+                .maxSessionsPreventsLogin(false)
+                .expiredUrl("/login?expired=true")
+                .sessionRegistry(sessionRegistry())
+            )
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
@@ -95,4 +105,16 @@ public class SecurityConfig {
 	        return source;
 	    }
 
-}
+	    
+	    @Bean
+	    public SessionRegistry sessionRegistry() {
+	        return new SessionRegistryImpl();
+	    }
+
+	    // This bean is needed to enable session concurrency events (like session destroyed)
+	    @Bean
+	    public static ServletListenerRegistrationBean<HttpSessionEventPublisher> httpSessionEventPublisher() {
+	        return new ServletListenerRegistrationBean<>(new HttpSessionEventPublisher());
+	    }
+	}
+

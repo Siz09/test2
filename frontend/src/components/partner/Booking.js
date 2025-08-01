@@ -81,7 +81,7 @@ const Booking = () => {
   );
 
   const handleAdd = () => {
-    navigate("/admin/bookings/new");
+    navigate("/partner/bookings/new");
     setActionMenu({ open: false, index: null });
   };
 
@@ -147,16 +147,22 @@ const Booking = () => {
                 <td>{b.duration}</td>
                 <td>{b.guests}</td>
                 <td>
-                  <span
-                    className="status-badge"
-                    style={{
-                      background: statusColors[b.status] || "#eee",
-                      color: statusTextColors[b.status] || "#333",
-                    }}
-                  >
-                    {b.status}
-                  </span>
-                </td>
+  <span
+    className="status-badge"
+    style={{
+      background:
+        statusColors[
+          b.status.charAt(0).toUpperCase() + b.status.slice(1).toLowerCase()
+        ] || "#eee",
+      color:
+        statusTextColors[
+          b.status.charAt(0).toUpperCase() + b.status.slice(1).toLowerCase()
+        ] || "#333",
+    }}
+  >
+    {b.status}
+  </span>
+</td>
                 <td style={{ position: "relative" }}>
                   <button
                     className="action-btn"

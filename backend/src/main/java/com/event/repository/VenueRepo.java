@@ -23,6 +23,13 @@ public interface VenueRepo extends JpaRepository<Venue, Long> {
 	long countByPartner(Partner partner);
 	
 	
+	List<Venue> findByCategoryIgnoreCase(String category);
+	
+	List<Venue> findByLocationIgnoreCase(String location);
+	
+	List<Venue> findByCategoryIgnoreCaseAndLocationIgnoreCase(String category, String location);
+	
+	
 	
 	
 

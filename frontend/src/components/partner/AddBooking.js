@@ -69,77 +69,301 @@ const AddBooking = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: 500, margin: "auto" }}>
-      <h2>Add New Booking</h2>
-      {apiError && <div style={{ color: "red" }}>{apiError}</div>}
-
-      <div>
-        <label htmlFor="venueId">Venue</label>
-        <select
-          name="venueId"
-          value={formData.venueId}
-          onChange={handleChange}
-        >
-          <option value="">Select a venue</option>
-          {venues.map((v) => (
-            <option key={v.venue_id} value={v.venue_id}>
-              {v.venueName}
-            </option>
-          ))}
-        </select>
-        {errors.venueId && (
-          <span style={{ color: "red" }}>{errors.venueId}</span>
-        )}
-      </div>
-
-      {selectedVenue && (
-        <div
-          style={{
-            background: "#f9f9f9",
-            padding: "10px",
-            marginTop: "8px",
-            borderRadius: "4px",
-          }}
-        >
-          <strong>Selected Venue:</strong>
-          <div>Name: {selectedVenue.venueName}</div>
-          <div>Price: {selectedVenue.price}</div>
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <div style={styles.header}>
+          <h2 style={styles.title}>Add New Booking</h2>
+          <p style={styles.subtitle}>Create a new booking for your venue</p>
         </div>
-      )}
 
-      <div>
-        <label>Date/Time</label>
-        <input
-          name="date"
-          type="datetime-local"
-          value={formData.date}
-          onChange={handleChange}
-        />
-        {errors.date && <span style={{ color: "red" }}>{errors.date}</span>}
-      </div>
+        {apiError && (
+          <div style={styles.errorAlert}>
+            <span style={styles.errorIcon}>⚠️</span>
+            {apiError}
+          </div>
+        )}
 
-      <div>
-        <label>Status</label>
-        <select
-          name="status"
-          value={formData.status}
-          onChange={handleChange}
-        >
-          <option value="">Choose status</option>
-          <option value="Confirmed">Confirmed</option>
-          <option value="Pending">Pending</option>
-          <option value="Cancelled">Cancelled</option>
-        </select>
-        {errors.status && <span style={{ color: "red" }}>{errors.status}</span>}
-      </div>
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <div style={styles.formGroup}>
+            <label style={styles.label} htmlFor="venueId">
+              Select Venue *
+            </label>
+            <select
+              name="venueId"
+              value={formData.venueId}
+              onChange={handleChange}
+              style={{
+                ...styles.select,
+                borderColor: errors.venueId ? "#e74c3c" : "#ddd"
+              }}
+            >
+              <option value="">Choose a venue from your list</option>
+              {venues.map((v) => (
+                <option key={v.venue_id} value={v.venue_id}>
+                  {v.venueName}
+                </option>
+              ))}
+            </select>
+            {errors.venueId && (
+              <span style={styles.errorText}>{errors.venueId}</span>
+            )}
+          </div>
 
-      <div style={{ marginTop: 20 }}>
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Adding..." : "Add Booking"}
-        </button>
+          {selectedVenue && (
+            <div style={styles.venueCard}>
+              <div style={styles.venueHeader}>
+                <span style={styles.venueIcon}>🏢</span>
+                <span style={styles.venueTitle}>Selected Venue Details</span>
+              </div>
+              <div style={styles.venueDetails}>
+                <div style={styles.venueInfo}>
+                  <span style={styles.venueLabel}>Name:</span>
+                  <span style={styles.venueValue}>{selectedVenue.venueName}</span>
+                </div>
+                <div style={styles.venueInfo}>
+                  <span style={styles.venueLabel}>Price:</span>
+                  <span style={styles.venueValue}>₹{selectedVenue.price}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>
+              Date & Time *
+            </label>
+            <input
+              name="date"
+              type="datetime-local"
+              value={formData.date}
+              onChange={handleChange}
+              style={{
+                ...styles.input,
+                borderColor: errors.date ? "#e74c3c" : "#ddd"
+              }}
+            />
+            {errors.date && <span style={styles.errorText}>{errors.date}</span>}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>
+              Booking Status *
+            </label>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              style={{
+                ...styles.select,
+                borderColor: errors.status ? "#e74c3c" : "#ddd"
+              }}
+            >
+              <option value="">Select booking status</option>
+              <option value="Confirmed">✅ Confirmed</option>
+              <option value="Pending">⏳ Pending</option>
+              <option value="Cancelled">❌ Cancelled</option>
+            </select>
+            {errors.status && <span style={styles.errorText}>{errors.status}</span>}
+          </div>
+
+          <div style={styles.buttonGroup}>
+            <button
+              type="button"
+              onClick={() => navigate("/partner/bookings")}
+              style={styles.cancelButton}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              style={{
+                ...styles.submitButton,
+                opacity: isSubmitting ? 0.7 : 1,
+                cursor: isSubmitting ? "not-allowed" : "pointer"
+              }}
+            >
+              {isSubmitting ? (
+                <span style={styles.loadingText}>
+                  <span style={styles.spinner}>⏳</span> Adding Booking...
+                </span>
+              ) : (
+                "Create Booking"
+              )}
+            </button>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
   );
 };
 
-export default AddBooking; 
+const styles = {
+  container: {
+    minHeight: "100vh",
+    background: "linear-gradient(135deg, #ffffffff 0%, #c5c5c5ff 100%)",
+    padding: "20px",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  card: {
+    background: "white",
+    borderRadius: "16px",
+    boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+    padding: "40px",
+    width: "100%",
+    maxWidth: "600px",
+    margin: "20px"
+  },
+  header: {
+    textAlign: "center",
+    marginBottom: "30px"
+  },
+  title: {
+    fontSize: "28px",
+    fontWeight: "700",
+    color: "#2c3e50",
+    margin: "0 0 8px 0"
+  },
+  subtitle: {
+    fontSize: "16px",
+    color: "#7f8c8d",
+    margin: "0"
+  },
+  errorAlert: {
+    background: "#fee",
+    border: "1px solid #fcc",
+    borderRadius: "8px",
+    padding: "12px 16px",
+    marginBottom: "24px",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    color: "#c0392b"
+  },
+  errorIcon: {
+    fontSize: "16px"
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "24px"
+  },
+  formGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px"
+  },
+  label: {
+    fontSize: "14px",
+    fontWeight: "600",
+    color: "#2c3e50",
+    marginBottom: "4px"
+  },
+  input: {
+    padding: "12px 16px",
+    border: "2px solid #ddd",
+    borderRadius: "8px",
+    fontSize: "16px",
+    transition: "border-color 0.3s ease",
+    outline: "none"
+  },
+  select: {
+    padding: "12px 16px",
+    border: "2px solid #ddd",
+    borderRadius: "8px",
+    fontSize: "16px",
+    backgroundColor: "white",
+    transition: "border-color 0.3s ease",
+    outline: "none",
+    cursor: "pointer"
+  },
+  errorText: {
+    color: "#e74c3c",
+    fontSize: "14px",
+    marginTop: "4px"
+  },
+  venueCard: {
+    background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+    border: "2px solid #dee2e6",
+    borderRadius: "12px",
+    padding: "20px",
+    marginTop: "8px"
+  },
+  venueHeader: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    marginBottom: "16px"
+  },
+  venueIcon: {
+    fontSize: "20px"
+  },
+  venueTitle: {
+    fontSize: "16px",
+    fontWeight: "600",
+    color: "#495057"
+  },
+  venueDetails: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px"
+  },
+  venueInfo: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center"
+  },
+  venueLabel: {
+    fontSize: "14px",
+    color: "#6c757d",
+    fontWeight: "500"
+  },
+  venueValue: {
+    fontSize: "14px",
+    color: "#495057",
+    fontWeight: "600"
+  },
+  buttonGroup: {
+    display: "flex",
+    gap: "16px",
+    marginTop: "16px"
+  },
+  cancelButton: {
+    flex: 1,
+    padding: "14px 24px",
+    border: "2px solid #ddd",
+    borderRadius: "8px",
+    backgroundColor: "white",
+    color: "#6c757d",
+    fontSize: "16px",
+    fontWeight: "600",
+    cursor: "pointer",
+    transition: "all 0.3s ease"
+  },
+  submitButton: {
+    flex: 2,
+    padding: "14px 24px",
+    border: "none",
+    borderRadius: "8px",
+    background: "linear-gradient(135deg, #000000ff 0%, #000000ff 100%)",
+    color: "white",
+    fontSize: "16px",
+    fontWeight: "600",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+    boxShadow: "0 4px 12px rgba(102, 126, 234, 0.4)"
+  },
+  loadingText: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px"
+  },
+  spinner: {
+    animation: "spin 1s linear infinite"
+  }
+};
+
+export default AddBooking;

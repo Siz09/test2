@@ -188,7 +188,7 @@ const UserManagement = () => {
                 <th>Email</th>
                 <th>Role</th>
                 <th>Join Date</th>
-                <th>Bookings</th>
+                {/* <th>Bookings</th> */}
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -203,7 +203,7 @@ const UserManagement = () => {
                 <td>{user.joinDate ? new Date(user.joinDate).toLocaleDateString() : 'N/A'}</td>
 
                 
-                  <td>{user.bookings || 0}</td>
+                  {/* <td>{user.bookings || 0}</td> */}
                   <td>
                     <StatusBadge status={user.status} />
                   </td>

@@ -135,6 +135,12 @@ fetchPartnersAndVenues();
     navigate(`/admin/partners/${partner.user_id}`);
   };
 
+  const StatusBadge = ({ status }) => {
+    const statusClasses = `status-badge ${status === 'Active' ? 'status-active' : 'status-inactive'}`;
+    return <span className={statusClasses}>{status}</span>;
+  };
+
+
   return (
     <div className="partner-management">
       <div className="header">
@@ -270,22 +276,8 @@ fetchPartnersAndVenues();
           <td>{partner.phoneNumber}</td>
           <td>{partner.venues || 0}</td>
           <td>
-            {partner.status ? (
-              partner.status === 'active' || partner.status === 'Verified' ? (
-                <span style={{ backgroundColor: '#28a745', color: 'white', padding: '4px 12px', borderRadius: '20px' }}>
-                  {partner.status}
-                </span>
-              ) : partner.status === 'Inactive' || partner.status === 'Disabled' ? (
-                <span style={{ backgroundColor: '#dc3545', color: 'white', padding: '4px 12px', borderRadius: '20px' }}>
-                  {partner.status}
-                </span>
-              ) : (
-                <span>{partner.status}</span>
-              )
-            ) : (
-              <span style={{ color: 'gray' }}>No status</span>
-            )}
-          </td>
+                    <StatusBadge status={partner.status} />
+                  </td>
 
                     <td className="action-cell">
                       <div
@@ -296,10 +288,10 @@ fetchPartnersAndVenues();
                       </div>
                       {actionMenu === partner.user_id && (
                         <div className="action-menu">
-                          <button onClick={() => handleViewPartner(partner)}>View</button>
-                          <button onClick={() => handleEditPartner(partner)}>Edit</button>
-                          <button onClick={() => handleSuspend(partner.user_id)}>Suspend</button>
-                          <button onClick={() => handleDelete(partner.user_id)}>Delete</button>
+                          <button onClick={() => handleViewPartner(partner)}>View Partner</button>
+                          <button onClick={() => handleEditPartner(partner)}>Edit Partner</button>
+                          {/* <button onClick={() => handleSuspend(partner.user_id)}>Suspend Partner</button> */}
+                          <button onClick={() => handleDelete(partner.user_id)}>Delete Partner</button>
                         </div>
                       )}
                     </td>

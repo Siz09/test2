@@ -89,7 +89,7 @@ const Booking = () => {
     <div className="booking-management-container">
       <div className="booking-header">
         <h2>Booking Management</h2>
-        <button
+        {/* <button
           onClick={handleAdd}
           style={{
             background: "#111",
@@ -103,7 +103,7 @@ const Booking = () => {
           }}
         >
           + Add New Booking
-        </button>
+        </button> */}
       </div>
       <a href="#" className="manage-link">
         Manage all booking

@@ -1,230 +1,331 @@
-.footer {
-  background: #333;
+.coordina-footer {
+  background: #000000;
   color: white;
-  padding: 50px 40px 20px;
-  max-width: 1920px;
-  margin: 0 auto;
+  margin-top: auto;
 }
 
-.footer-content {
-  max-width: 1920px;
+.coordina-footer-container {
+  max-width: 1470px;
   margin: 0 auto;
+  padding: 0 24px;
+}
+
+.coordina-footer-content {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 40px;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 48px;
+  padding: 60px 0 40px;
+  align-items: start;
 }
 
-.footer-column h4 {
-  margin-bottom: 20px;
+/* Brand Section */
+.coordina-footer-brand {
+  display: flex;
+  flex-direction: column;
+}
+
+.coordina-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.coordina-logo-image {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.coordina-brand-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.coordina-logo-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.coordina-brand-name {
+  font-size: 36px;
+  font-weight: 300;
+  color: white;
+  margin: 0;
+  letter-spacing: 2px;
+}
+
+.coordina-brand-accent {
+  font-weight: 700;
   color: #ffd700;
+}
+
+.coordina-brand-tagline {
+  font-size: 16px;
+  color: #b0b0b0;
+  margin: 0;
+  line-height: 1.5;
+  max-width: 280px;
+}
+
+/* Newsletter Section */
+.coordina-footer-newsletter {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.coordina-newsletter-title {
   font-size: 16px;
   font-weight: 600;
-}
-
-.footer-column ul {
-  list-style: none;
+  color: white;
   margin: 0;
-  padding: 0;
+  line-height: 1.4;
+  letter-spacing: 0.5px;
 }
 
-.footer-column li {
-  margin-bottom: 8px;
-  color: #ccc;
-  cursor: pointer;
-  transition: color 0.3s ease;
-  font-size: 14px;
-}
-
-.footer-column li:hover {
-  color: #ffd700;
-}
-
-.footer-column p {
-  color: #ccc;
-  font-size: 14px;
-  line-height: 1.5;
-  margin-bottom: 15px;
-}
-
-.social-media {
+.coordina-newsletter-form {
   display: flex;
-  gap: 10px;
+  gap: 0;
+  max-width: 400px;
 }
 
-.social-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
+.coordina-email-input {
+  flex: 1;
+  padding: 16px 20px;
+  background: transparent;
+  border: 2px solid #666;
+  color: white;
+  font-size: 14px;
+  outline: none;
+  border-right: none;
+}
+
+.coordina-email-input::placeholder {
+  color: #999;
+  font-weight: 500;
+}
+
+.coordina-email-input:focus {
+  border-color: #ffd700;
+}
+
+.coordina-subscribe-btn {
+  padding: 16px 24px;
+  background: #ffd700;
+  color: #3a4a4a;
+  border: 2px solid #ffd700;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+}
+
+.coordina-subscribe-btn:hover {
+  background: #e6c200;
+  border-color: #e6c200;
+}
+
+/* Right Section */
+.coordina-footer-right {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.coordina-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 16px 0;
+  letter-spacing: 0.5px;
+}
+
+/* Social Media */
+.coordina-social-links {
+  display: flex;
+  gap: 12px;
+}
+
+.coordina-social-link {
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.social-icon.facebook {
-  background: #3b5998;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #666;
+  border-radius: 50%;
   color: white;
-}
-
-.social-icon.twitter {
-  background: #1da1f2;
-  color: white;
-}
-
-.social-icon.instagram {
-  background: linear-gradient(
-    45deg,
-    #f09433 0%,
-    #e6683c 25%,
-    #dc2743 50%,
-    #cc2366 75%,
-    #bc1888 100%
-  );
-  color: white;
-}
-
-.social-icon:hover {
-  transform: translateY(-2px);
-}
-
-.live-chat {
-  background: #ffd700;
-  color: #333;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
+  text-decoration: none;
   transition: all 0.3s ease;
 }
 
-.live-chat:hover {
-  background: #ffc107;
-  transform: translateY(-1px);
-}
-
-.footer-bottom {
-  text-align: center;
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid #555;
-  color: #999;
-  font-size: 14px;
-}
-
-.highlight {
+.coordina-social-link:hover {
+  border-color: #ffd700;
   color: #ffd700;
-  font-weight: 600;
 }
 
+/* Contact */
+.coordina-phone-number {
+  font-size: 24px;
+  font-weight: 300;
+  color: white;
+  text-decoration: none;
+  letter-spacing: 1px;
+}
+
+.coordina-phone-number:hover {
+  color: #ffd700;
+}
+
+/* Navigation Links */
+.coordina-footer-nav {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  padding: 20px 0;
+  border-top: 1px solid #555;
+  border-bottom: 1px solid #555;
+}
+
+.coordina-nav-link {
+  color: #b0b0b0;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  transition: color 0.3s ease;
+  letter-spacing: 0.5px;
+}
+
+.coordina-nav-link:hover {
+  color: white;
+}
+
+/* Footer Bottom */
+.coordina-footer-bottom {
+  padding: 24px 0;
+}
+
+.coordina-footer-bottom-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.coordina-footer-bottom p {
+  font-size: 14px;
+  color: #b0b0b0;
+  margin: 0;
+}
+
+.coordina-footer-legal {
+  display: flex;
+  gap: 32px;
+}
+
+.coordina-footer-legal a {
+  font-size: 14px;
+  color: #b0b0b0;
+  text-decoration: none;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: color 0.3s ease;
+}
+
+.coordina-footer-legal a:hover {
+  color: white;
+}
+
+/* Responsive Design */
 @media (max-width: 1024px) {
-  .footer-content {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
+  .coordina-footer-content {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    text-align: center;
   }
 
-  .footer {
-    padding: 40px 30px 20px;
-  }
-
-  .footer-column h4 {
-    font-size: 15px;
-  }
-
-  .footer-column li,
-  .footer-column p {
-    font-size: 13px;
+  .coordina-footer-nav {
+    gap: 24px;
   }
 }
 
 @media (max-width: 768px) {
-  .footer {
-    padding: 40px 20px 20px;
+  .coordina-footer-container {
+    padding: 0 16px;
   }
 
-  .footer-content {
-    grid-template-columns: repeat(2, 1fr);
+  .coordina-footer-content {
+    padding: 40px 0 30px;
+    gap: 32px;
+  }
+
+  .coordina-footer-nav {
+    flex-wrap: wrap;
     gap: 20px;
   }
 
-  .footer-column h4 {
+  .coordina-nav-link {
     font-size: 14px;
-    margin-bottom: 15px;
   }
 
-  .footer-column li,
-  .footer-column p {
-    font-size: 12px;
+  .coordina-footer-bottom-content {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
   }
 
-  .social-icon {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
+  .coordina-footer-legal {
+    gap: 20px;
   }
 
-  .live-chat {
-    padding: 8px 16px;
-    font-size: 12px;
+  .coordina-brand-name {
+    font-size: 28px;
   }
 
-  .footer-bottom {
-    margin-top: 30px;
-    padding-top: 15px;
-    font-size: 12px;
+  .coordina-newsletter-form {
+    max-width: 100%;
   }
 }
 
 @media (max-width: 480px) {
-  .footer-content {
-    grid-template-columns: 1fr;
+  .coordina-footer-content {
+    padding: 30px 0 20px;
   }
 
-  .footer {
-    padding: 30px 15px 15px;
+  .coordina-newsletter-form {
+    flex-direction: column;
   }
 
-  .footer-column {
-    margin-bottom: 20px;
+  .coordina-email-input {
+    border-right: 2px solid #666;
+    border-bottom: none;
   }
 
-  .footer-column h4 {
-    font-size: 13px;
+  .coordina-subscribe-btn {
+    border-top: none;
+  }
+
+  .coordina-footer-legal {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .coordina-phone-number {
+    font-size: 20px;
+  }
+
+  .coordina-logo-image {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+
+  .coordina-logo-container {
+    gap: 12px;
     margin-bottom: 12px;
-  }
-
-  .footer-column li {
-    margin-bottom: 6px;
-    font-size: 11px;
-  }
-
-  .footer-column p {
-    font-size: 11px;
-    margin-bottom: 12px;
-  }
-
-  .social-media {
-    gap: 8px;
-  }
-
-  .social-icon {
-    width: 26px;
-    height: 26px;
-    font-size: 11px;
-  }
-
-  .live-chat {
-    padding: 7px 14px;
-    font-size: 11px;
-  }
-
-  .footer-bottom {
-    margin-top: 25px;
-    padding-top: 12px;
-    font-size: 11px;
   }
 }

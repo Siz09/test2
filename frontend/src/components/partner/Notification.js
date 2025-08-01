@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import '../../styles/admin/Notification.css';
+import { notificationService } from '../../services/api';
 
 const tabList = [
   { key: 'all', label: 'All notifications' },
@@ -8,16 +9,19 @@ const tabList = [
 ];
 
 const Notification = () => {
-  const [tab, setTab] = useState('all');
-  const [notifications, setNotifications] = useState([]);
+ const [tab, setTab] = React.useState('all');
+  const [notifications, setNotifications] = React.useState([]);
 
-  // Fetch notifications from backend
-  const fetchNotifications = useCallback(async () => {
+  // Assume userId is available here
+  const userId = localStorage.getItem("userId");  // or get it however you prefer
+
+  // Fetch notifications from backend using your service
+  const fetchNotifications = React.useCallback(async () => {
     try {
-      const res = await fetch('/api/notifications');
-      if (!res.ok) throw new Error('Failed to fetch notifications');
-      const data = await res.json();
+      if (!userId) throw new Error("User not authenticated");
+      const data = await notificationService.getUserNotifications(userId);
       setNotifications(data);
+      console.log("notifications:",notifications)
     } catch (e) {
       // fallback mock data
       setNotifications([
@@ -30,9 +34,9 @@ const Notification = () => {
         { id: 7, type: 'partner', message: 'A new partner has registered.', time: '2 weeks ago', read: true },
       ]);
     }
-  }, []);
+  }, [userId]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 10000); // Poll every 10s
     return () => clearInterval(interval);

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { userService } from '../../services/api'; // Import your API service
 import '../../styles/admin/AddUsers.css';
 import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AddUsers = () => {
    const navigate = useNavigate();
@@ -25,6 +27,19 @@ const AddUsers = () => {
   const [panCardImage, setPanCardImage] = useState(null);
   const [businessDocument, setBusinessDocument] = useState(null);
 
+  // Phone number input handler: only allow digits, max 10
+  const handlePhoneChange = (e) => {
+    let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+    if (value.length > 10) value = value.slice(0, 10);
+    setPhone(value);
+  };
+
+  // Password validation function
+  const isStrongPassword = (pwd) => {
+    // At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/.test(pwd);
+  };
+
   const validateForm = () => {
     const newErrors = {};
     
@@ -35,8 +50,9 @@ const AddUsers = () => {
       newErrors.email = 'Please enter a valid email';
     }
     if (!phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required';
+    else if (phoneNumber.length !== 10) newErrors.phoneNumber = 'Phone number must be 10 digits';
     if (!password) newErrors.password = 'Password is required';
-    else if (password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+    else if (!isStrongPassword(password)) newErrors.password = 'Password must be at least 8 characters, include uppercase, lowercase, number, and special character';
     if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
     
     if (userType === 'Partner') {
@@ -58,41 +74,33 @@ const AddUsers = () => {
   setApiError('');
   setSuccessMessage('');
 
-  // Construct the partner JSON object
-  const partnerData = {
+  // Construct the user object
+  const userData = {
     fullname,
     email,
     phoneNumber,
     password,
-    role: userType.charAt(0).toUpperCase() + userType.slice(1).toLowerCase(), // e.g., 'Partner'
+    role: userType.charAt(0).toUpperCase() + userType.slice(1).toLowerCase(),
     status: accountActive ? 'Active' : 'Inactive',
     sendWelcomeEmail: sendEmail,
   };
 
   if (userType === 'Partner') {
-    partnerData.company = company;
-    partnerData.businessRegistrationNumber = businessRegistrationNumber;
-    partnerData.businessAddress = businessAddress;
-  }
-
-  const formData = new FormData();
-
-  // Append JSON as a Blob with content type application/json
-  formData.append(
-    'partner',
-    new Blob([JSON.stringify(partnerData)], { type: 'application/json' })
-  );
-
-  // Append files (optional)
-  if (userType === 'Partner') {
-    if (panCardImage) formData.append('panCardImage', panCardImage);
-    if (businessDocument) formData.append('businessDocument', businessDocument);
+    userData.company = company;
+    userData.businessRegistrationNumber = businessRegistrationNumber;
+    userData.businessAddress = businessAddress;
+    // Files are omitted as per request
   }
 
   try {
-    const response = await userService.addUser(formData);
+    // Send JSON directly instead of FormData
+    const response = await userService.addUser(userData);
     setSuccessMessage('User created successfully!');
-    // reset form states...
+    toast.success('User created successfully!');
+    setTimeout(() => {
+      navigate('/admin/users');
+    }, 1500);
+    // Optionally reset form fields here
   } catch (error) {
     setApiError(error.response?.data?.message || 'Failed to create user. Please try again.');
   } finally {
@@ -166,8 +174,11 @@ const AddUsers = () => {
               id="phone"
               placeholder="Enter phone number"
               value={phoneNumber}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={handlePhoneChange}
               className={errors.phoneNumber ? 'error' : ''}
+              maxLength={10}
+              inputMode="numeric"
+              pattern="[0-9]{10}"
             />
             {errors.phoneNumber && <span className="error-message">{errors.phoneNumber}</span>}
             
@@ -249,7 +260,7 @@ const AddUsers = () => {
               <input
                 type="password"
                 id="password"
-                placeholder="Create password (min 8 characters)"
+                placeholder="Create password (min 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={errors.password ? 'error' : ''}
@@ -313,6 +324,7 @@ const AddUsers = () => {
           </div>
         </form>
       </div>
+      <ToastContainer />
     </div>
   );
 };

@@ -42,6 +42,10 @@ public abstract class User {
     
     private String status;
     
+    private String otpCode;
+    
+    private LocalDateTime otpExpiry;
+    
     @Column(name = "user_type", insertable = false, updatable = false)
     private String userType;
 
@@ -152,6 +156,24 @@ public abstract class User {
 	public void setUserType(String userType) {
 		this.userType = userType;
 	}
+
+	public LocalDateTime getOtpExpiry() {
+		return otpExpiry;
+	}
+
+	public void setOtpExpiry(LocalDateTime otpExpiry) {
+		this.otpExpiry = otpExpiry;
+	}
+
+	public String getOtpCode() {
+		return otpCode;
+	}
+
+	public void setOtpCode(String otpCode) {
+		this.otpCode = otpCode;
+	}
+	
+	
 
 	
 }

@@ -1,10 +1,8 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import "../../styles/Header.css"
-import { useUserSession } from "../../context/UserSessionContext";
-
-
+import { useUserSession } from "../../context/UserSessionContext"
+import { notificationService } from "../../services/api"
 
 // SVG Icons (keeping all existing icons)
 const SearchIcon = () => (
@@ -85,22 +83,7 @@ const XIcon = () => (
   </svg>
 )
 
-// Sample data
-const sampleNotifications = [
-  {
-    id: 1,
-    text: "Your booking for Grand Ballroom has been confirmed",
-    time: "Just now",
-    color: "green",
-  },
-  {
-    id: 2,
-    text: "Payment of NPR 30,000 has been processed successfully",
-    time: "1 min ago",
-    color: "blue",
-  },
-]
-
+// Sample data for search (keeping existing)
 const globalSearchData = {
   venues: [
     {
@@ -138,7 +121,7 @@ const globalSearchData = {
 
 export default function Header({ hasNotifications = true, isLoggedIn = false, user = null, onLogout }) {
   // Always call hooks at the top
-  const { user: sessionUser, isUserLoggedIn, logout, loading } = useUserSession();
+  const { user: sessionUser, isUserLoggedIn, logout, loading } = useUserSession()
 
   // State management
   const [recentSearches, setRecentSearches] = useState(["Grand Ballroom", "Wedding Planning", "Conference Room"])
@@ -147,8 +130,78 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false)
   const [searchDropdownOpen, setSearchDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  
- 
+
+  // Notification states
+  const [notifications, setNotifications] = useState([])
+  const [notifLoading, setNotifLoading] = useState(false)
+  const [notifError, setNotifError] = useState(null)
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  // Helper to get userId from localStorage
+  const getUserId = () => {
+    return localStorage.getItem("userId")
+  }
+
+  // Helper to format notification time
+  const formatNotificationTime = (dateString) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60))
+
+    if (diffInMinutes < 1) return "Just now"
+    if (diffInMinutes < 60) return `${diffInMinutes} min ago`
+    if (diffInMinutes < 1440)
+      return `${Math.floor(diffInMinutes / 60)} hour${Math.floor(diffInMinutes / 60) > 1 ? "s" : ""} ago`
+    return `${Math.floor(diffInMinutes / 1440)} day${Math.floor(diffInMinutes / 1440) > 1 ? "s" : ""} ago`
+  }
+
+  // Fetch notifications when dropdown opens
+  useEffect(() => {
+    if (notificationDropdownOpen && isUserLoggedIn) {
+      const userId = getUserId()
+      if (!userId) return
+
+      setNotifLoading(true)
+      setNotifError(null)
+
+      notificationService
+        .getUserNotifications(userId)
+        .then((data) => {
+          console.log("Fetched notifications:", data)
+          setNotifications(Array.isArray(data) ? data : [])
+        })
+        .catch((err) => {
+          console.error("Error fetching notifications:", err)
+          setNotifError("Failed to load notifications")
+        })
+        .finally(() => setNotifLoading(false))
+    }
+  }, [notificationDropdownOpen, isUserLoggedIn])
+
+  // Fetch unread count on component mount and periodically
+  useEffect(() => {
+    if (isUserLoggedIn) {
+      const userId = getUserId()
+      if (!userId) return
+
+      const fetchUnreadCount = () => {
+        notificationService
+          .getUnreadCount(userId)
+          .then((data) => {
+            setUnreadCount(data.count || 0)
+          })
+          .catch((err) => {
+            console.error("Error fetching unread count:", err)
+          })
+      }
+
+      fetchUnreadCount()
+
+      // Poll for unread count every 30 seconds
+      const interval = setInterval(fetchUnreadCount, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [isUserLoggedIn])
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -163,7 +216,6 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
         setSearchDropdownOpen(false)
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside)
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
@@ -177,53 +229,104 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
         setIsMobileMenuOpen(false)
       }
     }
-
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [isMobileMenuOpen])
 
-  if (loading) return null; // Or a skeleton header if you want
+  if (loading) return null
 
-  console.log("Header isLoggedIn:", isUserLoggedIn);
+  console.log("Header isLoggedIn:", isUserLoggedIn)
+
   // Event handlers
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
   }
 
   const handleLogout = async () => {
-  try {
-    logout();               // <-- Call context logout method here
-    setProfileDropdownOpen(false);
-    window.location.href = "/login"; // Navigate to home or login
-    console.log("Logged out successfully");
-  } catch (error) {
-    console.error("Logout failed:", error);
+    try {
+      logout()
+      setProfileDropdownOpen(false)
+      // Clear notification state on logout
+      setNotifications([])
+      setUnreadCount(0)
+      window.location.href = "/login"
+      console.log("Logged out successfully")
+    } catch (error) {
+      console.error("Logout failed:", error)
+    }
   }
-};
-
 
   const handleSignInClick = () => {
-    // Replace with your navigation method
     window.location.href = "/login"
   }
 
   const handleNavigation = (path) => {
-    // Replace with your navigation method
     window.location.href = path
     setIsMobileMenuOpen(false)
   }
 
-  // Search functionality
+  // Notification handlers
+  const handleMarkAllAsRead = async () => {
+    const userId = getUserId()
+    if (!userId) return
+
+    try {
+      await notificationService.markAllAsRead(userId)
+      // Update local state to mark all as read
+      setNotifications((prev) => prev.map((n) => ({ ...n, status: "READ" })))
+      setUnreadCount(0)
+      console.log("All notifications marked as read")
+    } catch (error) {
+      console.error("Error marking all as read:", error)
+    }
+  }
+
+  const handleMarkAsRead = async (notificationId) => {
+    const userId = getUserId()
+    if (!userId) return
+
+    try {
+      await notificationService.markAsRead(notificationId, userId)
+      // Update local state
+      setNotifications((prev) => prev.map((n) => (n.id === notificationId ? { ...n, status: "READ" } : n)))
+      setUnreadCount((prev) => Math.max(0, prev - 1))
+      console.log("Notification marked as read")
+    } catch (error) {
+      console.error("Error marking notification as read:", error)
+    }
+  }
+
+  const handleDeleteNotification = async (notificationId) => {
+    const userId = getUserId()
+    if (!userId) return
+
+    try {
+      await notificationService.deleteNotification(notificationId, userId)
+      // Remove from local state
+      setNotifications((prev) => prev.filter((n) => n.id !== notificationId))
+      // Update unread count if it was unread
+      const notification = notifications.find((n) => n.id === notificationId)
+      if (notification && notification.status === "UNREAD") {
+        setUnreadCount((prev) => Math.max(0, prev - 1))
+      }
+      console.log("Notification deleted")
+    } catch (error) {
+      console.error("Error deleting notification:", error)
+    }
+  }
+
+  const handleViewAllNotifications = () => {
+    handleNavigation("/notifications")
+  }
+
+  // Search functionality (keeping existing)
   const handleGlobalSearch = (query, type = null) => {
     console.log("Global search:", query, type ? `in ${type}` : "")
-
     if (query && !recentSearches.includes(query)) {
       setRecentSearches((prev) => [query, ...prev.slice(0, 4)])
     }
-
     setSearchDropdownOpen(false)
     setSearchQuery("")
-
     if (type === "venues") {
       handleNavigation("/venues")
     } else {
@@ -237,7 +340,6 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
 
   const filterGlobalResults = (query) => {
     if (!query.trim()) return null
-
     const results = {}
     const searchLower = query.toLowerCase()
 
@@ -262,7 +364,6 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
 
   const renderSearchComponent = () => {
     const searchResults = filterGlobalResults(searchQuery)
-
     return (
       <div className="global-search-wrapper">
         <button className="search-trigger-btn" onClick={() => setSearchDropdownOpen(!searchDropdownOpen)}>
@@ -280,7 +381,6 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
               autoFocus
             />
           </div>
-
           <div className="search-results-content">
             {searchQuery ? (
               searchResults ? (
@@ -306,7 +406,6 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
                       ))}
                     </div>
                   )}
-
                   {searchResults.services && (
                     <div className="search-category">
                       <h4 className="search-category-header">Services</h4>
@@ -358,7 +457,6 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
                     ))}
                   </div>
                 )}
-
                 <div className="search-category">
                   <h4 className="search-category-header">Popular Venues</h4>
                   {globalSearchData.venues.map((venue) => (
@@ -378,7 +476,6 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
               </>
             )}
           </div>
-
           <div className="search-actions-bar">
             <button className="search-view-all-btn" onClick={() => handleGlobalSearch(searchQuery || "all results")}>
               {searchQuery ? `See all results for "${searchQuery}"` : "View all categories"}
@@ -393,11 +490,11 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
     <nav className="navbar">
       <div className="navbar-left">
         <img
-          src={require("../../images/logo.png")}
+          src={require("../../images/logo.png") || "/placeholder.svg"}
           alt="Coordina Logo"
           className="logo-icon"
           onClick={() => handleNavigation("/home")}
-          style={{ cursor: "pointer", width: 100, height: 100 }}
+          style={{ cursor: "pointer", width: 50, height: 50 }}
         />
       </div>
 
@@ -411,19 +508,19 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
         <span className="nav-link" onClick={() => handleNavigation("/about")}>
           About
         </span>
-        {/* <span className="nav-link" onClick={() => handleNavigation("/media")}>
-          Media
-        </span> */}
-        <span className="nav-link" onClick={() => handleNavigation("/bookings")}>
-          Booking
-        </span>
         <span className="nav-link" onClick={() => handleNavigation("/contact")}>
           Contact Us
+        </span>
+        <span className="nav-link" onClick={() => handleNavigation("/bookings/user/:userId")}>
+          Booking
+        </span>
+        <span className="nav-link" onClick={() => handleNavigation("/review")}>
+          Review
         </span>
       </div>
 
       <div className="navbar-right">
-        {renderSearchComponent()}
+        {/* {renderSearchComponent()} */}
 
         {isUserLoggedIn ? (
           <div className="user-actions">
@@ -433,43 +530,70 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
                 onClick={() => setNotificationDropdownOpen(!notificationDropdownOpen)}
               >
                 <BellIcon />
-                {hasNotifications && <div className="notification-badge"></div>}
+                {unreadCount > 0 && <div className="notification-badge">{unreadCount > 99 ? "99+" : unreadCount}</div>}
               </button>
+
               <div className={`notification-dropdown ${notificationDropdownOpen ? "active" : ""}`}>
                 <div className="notification-header">
                   <h3 className="notification-title">Notifications</h3>
-                  <button className="mark-all-read" onClick={() => console.log("Mark all as read")}>
-                    Mark all as read
-                  </button>
+                  {unreadCount > 0 && (
+                    <button className="mark-all-read" onClick={handleMarkAllAsRead}>
+                      Mark all as read
+                    </button>
+                  )}
                 </div>
+
                 <div className="notification-list">
-                  {sampleNotifications.length > 0 ? (
-                    sampleNotifications.map((notification) => (
-                      <div key={notification.id} className="notification-item">
-                        <div className={`notification-dot ${notification.color}`}></div>
+                  {notifLoading ? (
+                    <div className="notification-loading">Loading notifications...</div>
+                  ) : notifError ? (
+                    <div className="no-notifications">{notifError}</div>
+                  ) : notifications.length > 0 ? (
+                    notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`notification-item ${notification.status === "UNREAD" ? "unread" : ""}`}
+                        onClick={() => notification.status === "UNREAD" && handleMarkAsRead(notification.id)}
+                      >
+                        <div
+                          className={`notification-dot ${notification.status === "UNREAD" ? "blue" : "green"}`}
+                        ></div>
                         <div className="notification-content">
-                          <p className="notification-text">{notification.text}</p>
-                          <p className="notification-time">{notification.time}</p>
+                          <p className="notification-text">
+                            {notification.message || notification.title || notification.content}
+                          </p>
+                          <p className="notification-time">{formatNotificationTime(notification.createdAt)}</p>
                         </div>
+                        <button
+                          className="notification-clear"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteNotification(notification.id)
+                          }}
+                        >
+                          <XIcon style={{ width: "12px", height: "12px" }} />
+                        </button>
                       </div>
                     ))
                   ) : (
                     <div className="no-notifications">No new notifications</div>
                   )}
                 </div>
+
                 <div className="notification-footer">
-                  <button className="view-all-button" onClick={() => console.log("View all notifications")}>
+                  <button className="view-all-button" onClick={handleViewAllNotifications}>
                     View all notifications
                   </button>
                 </div>
               </div>
             </div>
+
             <div className="profile-container">
               <button className="profile-icon" onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}>
                 <UserIcon />
               </button>
               <div className={`profile-dropdown ${profileDropdownOpen ? "active" : ""}`}>
-                <button className="dropdown-item" onClick={() => handleNavigation("/profile")}>
+                <button className="dropdown-item" onClick={() => handleNavigation("/profile/user")}>
                   <ProfileMenuIcon />
                   Profile
                 </button>
@@ -505,30 +629,30 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
             <span className="mobile-nav-link" onClick={() => handleNavigation("/about")}>
               About
             </span>
-            {/* <span className="mobile-nav-link" onClick={() => handleNavigation("/media")}>
-              Media
-            </span> */}
-            <span className="nav-link" onClick={() => handleNavigation("/bookings")}>
-              Booking
-            </span>
             <span className="mobile-nav-link" onClick={() => handleNavigation("/contact")}>
               Contact Us
             </span>
+            <span className="mobile-nav-link" onClick={() => handleNavigation("/review")}>
+              Review
+            </span>
+
+            
           </div>
-
           <div className="mobile-nav-divider"></div>
-
           <div className="mobile-nav-actions">
             {isUserLoggedIn ? (
               <div className="mobile-user-actions">
                 <div className="mobile-action-row">
                   <button
                     className="mobile-action-btn"
-                    onClick={() => setNotificationDropdownOpen(!notificationDropdownOpen)}
+                    onClick={() => {
+                      setNotificationDropdownOpen(!notificationDropdownOpen)
+                      setIsMobileMenuOpen(false)
+                    }}
                   >
                     <BellIcon />
                     <span>Notifications</span>
-                    {hasNotifications && <div className="notification-badge"></div>}
+                    {unreadCount > 0 && <div className="notification-badge">{unreadCount}</div>}
                   </button>
                   <button className="mobile-action-btn" onClick={() => handleNavigation("/profile")}>
                     <UserIcon />

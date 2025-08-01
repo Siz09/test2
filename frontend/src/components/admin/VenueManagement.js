@@ -145,7 +145,11 @@ useEffect(() => {
   }, []);
 
 
-  
+  const StatusBadge = ({ status }) => {
+    const statusClasses = `status-badge ${status === 'Active' ? 'status-active' : 'status-inactive'}`;
+    return <span className={statusClasses}>{status}</span>;
+  };
+
 
   return (
     <div style={{ background: '#fff', borderRadius: 12, padding: 32, boxShadow: '0 2px 8px #eee' }}>
@@ -161,17 +165,17 @@ useEffect(() => {
           <tr style={{ background: '#f7f7f7', textAlign: 'left' }}>
             <th style={{ padding: 10 }}>ID</th>
             <th>Venue Image</th>
-          <th style={{ padding: 10 }}>Venue Name</th>
-          <th style={{ padding: 10 }}>Partner</th>
-          <th style={{ padding: 10 }}>Location</th>
-          <th style={{ padding: 10 }}>Capacity</th>
-          <th style={{ padding: 10 }}>Price/Hour</th>
-          <th style={{ padding: 10 }}>Minimum Booking Time</th>
-          <th style={{ padding: 10 }}>Opening Time</th>
-          <th style={{ padding: 10 }}>Closing Time</th>
-          <th style={{ padding: 10 }}>Bookings</th>
-          <th style={{ padding: 10 }}>Status</th>
-          <th style={{ padding: 10 }}>Actions</th>
+          <th style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>Venue Name</th>
+          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Partner</th>
+          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Location</th>
+          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Capacity</th>
+          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Price/Hour</th>
+          <th style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>Booking Time</th>
+          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Opening Time</th>
+          <th style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>Closing Time</th>
+          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Bookings</th>
+          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Status</th>
+          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Actions</th>
           </tr>
         </thead>
     <tbody>
@@ -189,31 +193,33 @@ useEffect(() => {
             <div>No image available</div>
           )}
       </td>
-     <td style={{ padding: 10 }}>{venue.venueName}</td>
-      <td style={{ padding: 10 }}>{venue.partnerName}</td>
-      <td style={{ padding: 10 }}>{venue.location}</td>
-      <td style={{ padding: 10 }}>{venue.capacity}</td>
-      <td style={{ padding: 10 }}>{venue.price}</td>
-        <td style={{ padding: 10 }}>{venue.minBookingHours}</td>
-      <td style={{ padding: 10 }}>{venue.openingTime}</td>
-      <td style={{ padding: 10 }}>{venue.closingTime}</td>
-      <td style={{ padding: 10 }}>{venue.bookingCount}</td>
-      <td style={{ padding: 10 }}>
+     <td style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle' }}>{venue.venueName}</td>
+      <td style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>{venue.partnerName}</td>
+      <td style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>{venue.location}</td>
+      <td style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>{venue.capacity}</td>
+      <td style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>{venue.price}</td>
+        <td style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>{venue.minBookingHours}</td>
+      <td style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>{venue.openingTime}</td>
+      <td style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>{venue.closingTime}</td>
+      <td style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>{venue.bookingCount}</td>
+      <td style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>
   <span style={{
-    background: venue.status?.toLowerCase() === 'active' ? '#e6ffe6' : '#ffe6e6',
-    color:      venue.status?.toLowerCase() === 'active' ? '#22bb33' : '#d9534f',
-    borderRadius: 12,
-    padding: '4px 14px',
-    fontWeight: 500,
-    fontSize: 14
-  }}>
-    {venue.status}
-  </span>
+  background: venue.status?.toLowerCase() === 'active' ? '#e6ffe6' : '#ffe6e6',
+  color: venue.status?.toLowerCase() === 'active' ? '#22bb33' : '#d9534f',
+  borderRadius: 12,
+  padding: '4px 14px',
+  fontWeight: 500,
+  fontSize: 14,
+  textAlign: 'center',
+  verticalAlign: 'middle'
+}}>
+  {venue.status?.toLowerCase() === 'active' ? 'Active' : 'Inactive'}
+</span>
 </td>
-      <td style={{ padding: 10, position: 'relative' }}>
+      <td style={{ padding: 10, position: 'relative',alignItems: 'center',justifyContent: 'center',display: 'flex' }}>
         {/* The toggle button */}
         <button
-          style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}
+          style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer',verticalAlign: 'middle' }}
           onClick={() => setMenuOpenId(menuOpenId === venue.venue_id ? null : venue.venue_id)}
           aria-label="Actions"
         >
@@ -236,7 +242,7 @@ useEffect(() => {
               minWidth: 180
             }}
           >
-            <div style={{ padding: '10px 16px', fontWeight: 600, color: '#888', borderBottom: '1px solid #f0f0f0' }}>
+            <div style={{ padding: '10px 16px', fontWeight: 600, color: '#888', borderBottom: '1px solid #f0f0f0',display: 'flex', justifyContent: 'center', alignItems: 'center', height: 40   }}>
               Actions
             </div>
            <button

@@ -12,6 +12,7 @@ const VenueGrid = ({
   totalPages = 3,
   onPageChange,
   venueType = "default",
+  onViewAll,
 }) => {
   const navigate = useNavigate();
 
@@ -59,9 +60,13 @@ const VenueGrid = ({
     >
       <div className="section-header">
         <h2>{title}</h2>
-        <a href="/" className="view-all">
+        <button
+          className="view-all"
+          onClick={onViewAll}
+          style={{ background: "none", border: "none", color: "#000000ff", cursor: "pointer", fontSize: "16px" }}
+        >
           {viewAllText}
-        </a>
+        </button>
       </div>
       <div className="venue-grid">
         {paginatedVenues.map((venue, index) => (

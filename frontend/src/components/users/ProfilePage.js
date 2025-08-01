@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { userService, bookingService } from "../../services/api"
+import { userService, bookingService, profileService } from "../../services/api"
 import "../../styles/venue-booking.css"
 import "../../styles/profile-page.css"
 import "../../styles/modern-components.css"
@@ -16,89 +16,96 @@ const ProfilePage = () => {
   const [showBookingDetails, setShowBookingDetails] = useState(false);
 
   useEffect(() => {
-    const fetchUserData = async () => {
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch user profile using JWT token
+      const userDetails = await profileService.getProfile();
+      console.log("User details fetched via token:", userDetails);
+
+      setUserData({
+        name: userDetails.fullname || userDetails.name || "John Doe",
+        email: userDetails.email || "john.doe@example.com",
+        location: userDetails.location || "Kathmandu, Nepal",
+        phone: userDetails.phoneNumber || userDetails.phone || "+977 98-12345678",
+        profileImage: userDetails.profileImage || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+        joinDate: userDetails.joinDate || "January 2023",
+        // Add other userDetails fields as needed
+      });
+
+      // Fetch user bookings
       try {
-        setLoading(true);
-        
-        // Get user data from localStorage first
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          const user = JSON.parse(storedUser);
-          setUserData({
-            name: user.fullname || user.name || "John Doe",
-            email: user.email || "john.doe@example.com",
-            location: user.location || "Kathmandu, Nepal",
-            phone: user.phoneNumber || user.phone || "+977 98-12345678",
-            profileImage: user.profileImage || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-            joinDate: user.joinDate || "January 2023",
-          });
+  const userId = userDetails.id || userDetails.user_id; // Adjust based on your backend response
+  const bookings = await bookingService.getUserBookings(userId);
+  console.log("User bookings fetched:", bookings);
 
-          // Fetch additional user details from API if user ID is available
-          if (user.user_id || user.id) {
-            try {
-              const userDetails = await userService.getUser(user.user_id || user.id);
-              console.log("User details fetched:", userDetails);
-              
-              setUserData(prev => ({
-                ...prev,
-                ...userDetails,
-                name: userDetails.fullname || prev.name,
-                phone: userDetails.phoneNumber || prev.phone
-              }));
-            } catch (apiError) {
-              console.log("Could not fetch additional user details:", apiError);
-              // Continue with stored user data
-            }
-          }
-        }
+  if (Array.isArray(bookings) && bookings.length > 0) {
+    console.log("Raw bookings data from API:", bookings);
+  const formattedBookings = bookings.map(b => ({
+    id: b.bookingId,
+    venue: b.venueName || "Unknown Venue",
+    date: b.bookedTime ? b.bookedTime.split("T")[0] : "N/A",
+    time: b.bookedTime ? b.bookedTime.split("T")[1]?.substring(0, 5) : "N/A",
+    location: b.venueLocation || "N/A",
+    status: b.status,
+    amount: b.amount || 0,  // If you want amount, add it to DTO and backend
+    guests: b.guests,
+    duration: b.duration,
+    
+  }));
+console.log("Formatted bookings:", formattedBookings);
+console.log('Final bookings for UI:', formattedBookings);
+formattedBookings.forEach(b => console.log('Venue:', b.venue));
+    setUserBookings(formattedBookings);
+  } else {
+    console.log("No bookings found for this user.");
+    setUserBookings([]); // No bookings
+  }
 
-        // Fetch user bookings
-        try {
-          const bookings = await bookingService.getUserBookings();
-          console.log("User bookings fetched:", bookings);
-          setUserBookings(Array.isArray(bookings) ? bookings : []);
-        } catch (bookingError) {
-          console.log("Could not fetch user bookings:", bookingError);
-          // Use mock data if API fails
-          setUserBookings([
-            {
-              id: 1,
-              eventName: "Wedding Reception",
-              venue: "Grand Ballroom",
-              date: "2024-02-15",
-              time: "18:00",
-              location: "Kathmandu, Nepal",
-              status: "confirmed",
-              amount: 75000,
-              guests: 150,
-              duration: 6,
-            },
-            {
-              id: 2,
-              eventName: "Corporate Meeting",
-              venue: "Conference Hall A",
-              date: "2024-01-28",
-              time: "14:00",
-              location: "Lalitpur, Nepal",
-              status: "confirmed",
-              amount: 25000,
-              guests: 50,
-              duration: 4,
-            }
-          ]);
-        }
+} catch (bookingError) {
+  console.error("Could not fetch user bookings:", bookingError);
 
-        setError(null);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        setError("Failed to load profile data. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Use fallback/mock data if API fails
+  setUserBookings([
+    {
+      id: 1,
+      eventName: "Wedding Reception",
+      venue: "Grand Ballroom",
+      date: "2024-02-15",
+      time: "18:00",
+      location: "Kathmandu, Nepal",
+      status: "confirmed",
+      amount: 75000,
+      guests: 150,
+      duration: 6,
+    },
+    {
+      id: 2,
+      eventName: "Corporate Meeting",
+      venue: "Conference Hall A",
+      date: "2024-01-28",
+      time: "14:00",
+      location: "Lalitpur, Nepal",
+      status: "confirmed",
+      amount: 25000,
+      guests: 50,
+      duration: 4,
+    },
+  ]);
+}
 
-    fetchUserData();
-  }, []);
+      setError(null);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      setError("Failed to load profile data. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchUserData();
+}, []);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -325,10 +332,10 @@ const ProfilePage = () => {
               <div className="profile-stat-number">{userStats.totalBookings}</div>
               <div className="profile-stat-label">Total Bookings</div>
             </div>
-            <div className="profile-stat-card">
+            {/* <div className="profile-stat-card">
               <div className="profile-stat-number">{userStats.upcomingEvents}</div>
               <div className="profile-stat-label">Upcoming Events</div>
-            </div>
+            </div> */}
             <div className="profile-stat-card">
               <div className="profile-stat-number">NPR {userStats.totalSpent.toLocaleString()}</div>
               <div className="profile-stat-label">Total Spent</div>
@@ -357,7 +364,7 @@ const ProfilePage = () => {
                 return (
                   <div key={booking.id} className={`profile-booking-card ${isPast ? "profile-booking-past" : ""}`}>
                     <div className="profile-booking-header">
-                      <h3 className="profile-booking-title">{booking.eventName}</h3>
+                      <h3 className="profile-booking-title">{booking.venue}</h3>
                       {getStatusBadge(status)}
                     </div>
 

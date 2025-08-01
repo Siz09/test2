@@ -16,7 +16,7 @@ import com.event.repository.UserRepo;
 import com.event.repository.VenueRepo;
 
 @RestController
-@RequestMapping("/api/stats")
+@RequestMapping("/api")
 
 public class StatsController {
 	
@@ -42,7 +42,7 @@ public class StatsController {
 //	        );
 //	   
 	    
-	    @GetMapping
+	    @GetMapping("/stats")
 	    public Map<String, Object> stats(Authentication authentication) {
 	    	   boolean isAdmin = authentication.getAuthorities().stream()
 	    	       .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));

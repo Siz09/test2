@@ -27,5 +27,7 @@ public class Attendee extends User {
     public void setBookings(List<Booking> bookings) {
         this.bookings = bookings;
     }
+
 }
+
 

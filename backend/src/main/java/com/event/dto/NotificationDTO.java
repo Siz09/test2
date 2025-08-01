@@ -1,86 +1,107 @@
 package com.event.dto;
 
 import java.time.LocalDateTime;
-import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class NotificationDTO {
-    private Long id;
-    private Long userId;
-    private String message;
-    private String type; // success, warning, error, info
-    private boolean read;
-    
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime timestamp;
 
-    // Constructors
-    public NotificationDTO() {
-        this.timestamp = LocalDateTime.now();
-        this.read = false;
-    }
+	 private Long recipientId;
+	    private Long senderId;
+	    private String title;
+	    private String message;
+	    private String type;
+	    private Long bookingId;
+	    private Long venueId;
+	    private String venueName;
+	    private LocalDateTime bookedTime;
 
-    public NotificationDTO(Long userId, String message, String type) {
-        this();
-        this.userId = userId;
-        this.message = message;
-        this.type = type;
-    }
 
-    public NotificationDTO(Long id, Long userId, String message, String type, boolean read, LocalDateTime timestamp) {
-        this.id = id;
-        this.userId = userId;
-        this.message = message;
-        this.type = type;
-        this.read = read;
-        this.timestamp = timestamp;
-    }
+	    
+	    // Constructors
+	   public NotificationDTO()
+	   {}
+	    
+	    public NotificationDTO(Long recipientId, String title, String message, String type) {
+	        this.recipientId = recipientId;
+	        this.title = title;
+	        this.message = message;
+	        this.type = type;
+	    }
 
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
+		public Long getRecipientId() {
+			return recipientId;
+		}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+		public void setRecipientId(Long recipientId) {
+			this.recipientId = recipientId;
+		}
 
-    public Long getUserId() {
-        return userId;
-    }
+		public Long getSenderId() {
+			return senderId;
+		}
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
+		public void setSenderId(Long senderId) {
+			this.senderId = senderId;
+		}
 
-    public String getMessage() {
-        return message;
-    }
+		public String getTitle() {
+			return title;
+		}
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+		public void setTitle(String title) {
+			this.title = title;
+		}
 
-    public String getType() {
-        return type;
-    }
+		public String getMessage() {
+			return message;
+		}
 
-    public void setType(String type) {
-        this.type = type;
-    }
+		public void setMessage(String message) {
+			this.message = message;
+		}
 
-    public boolean isRead() {
-        return read;
-    }
+		public String getType() {
+			return type;
+		}
 
-    public void setRead(boolean read) {
-        this.read = read;
-    }
+		public void setType(String type) {
+			this.type = type;
+		}
 
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
+		public Long getBookingId() {
+			return bookingId;
+		}
 
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
-    }
+		public void setBookingId(Long bookingId) {
+			this.bookingId = bookingId;
+		}
+
+		public Long getVenueId() {
+			return venueId;
+		}
+
+		public void setVenueId(Long venueId) {
+			this.venueId = venueId;
+		}
+
+		public String getVenueName() {
+			return venueName;
+		}
+
+		public void setVenueName(String venueName) {
+			this.venueName = venueName;
+		}
+
+		public LocalDateTime getBookedTime() {
+			return bookedTime;
+		}
+
+		public void setBookedTime(LocalDateTime bookedTime) {
+			this.bookedTime = bookedTime;
+		}
+
+	    
+	    
+	    
 }
+
+
