@@ -59,6 +59,46 @@ const UserViewVenue = () => {
     };
   }, [id]);
 
+  // Helper function to extract coordinates from Google Maps URL
+  const extractCoordinatesFromUrl = (mapUrl) => {
+    if (!mapUrl) return null;
+    
+    // Try to extract coordinates from various Google Maps URL formats
+    const patterns = [
+      /@(-?\d+\.?\d*),(-?\d+\.?\d*)/, // @lat,lng format
+      /q=(-?\d+\.?\d*),(-?\d+\.?\d*)/, // q=lat,lng format
+      /ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/, // ll=lat,lng format
+      /!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/, // 3d/4d format
+    ];
+    
+    for (const pattern of patterns) {
+      const match = mapUrl.match(pattern);
+      if (match) {
+        return {
+          lat: parseFloat(match[1]),
+          lng: parseFloat(match[2])
+        };
+      }
+    }
+    
+    return null;
+  };
+
+  // Generate Google Maps embed URL
+  const getMapEmbedUrl = (mapUrl, venueName, location) => {
+    if (!mapUrl) return null;
+    
+    const coordinates = extractCoordinatesFromUrl(mapUrl);
+    
+    if (coordinates) {
+      // Use coordinates for embed
+      return `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qcqn0Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8&q=${coordinates.lat},${coordinates.lng}&zoom=15`;
+    } else {
+      // Fallback to search by venue name and location
+      const query = encodeURIComponent(`${venueName} ${location}`);
+      return `https://www.google.com/maps/embed/v1/search?key=AIzaSyBFw0Qcqn0Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8&q=${query}`;
+    }
+  };
   const handleBookVenue = () => {
     navigate('/venue-booking', { state: { venueId: id, venueName: venue?.venueName } });
   };
@@ -194,6 +234,40 @@ const UserViewVenue = () => {
               </p>
             </div>
 
+            {/* Location Map Section */}
+            {venue.mapLocationUrl && (
+              <div className="uvv-location">
+                <h2 className="uvv-location__title">Location</h2>
+                <div className="uvv-location__content">
+                  <div className="uvv-map-container">
+                    <iframe
+                      src={getMapEmbedUrl(venue.mapLocationUrl, venue.venueName, venue.location)}
+                      width="100%"
+                      height="300"
+                      style={{ border: 0, borderRadius: '8px' }}
+                      allowFullScreen=""
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title={`Map showing location of ${venue.venueName}`}
+                    ></iframe>
+                  </div>
+                  <div className="uvv-location__details">
+                    <div className="uvv-location__address">
+                      <span className="uvv-location__icon">📍</span>
+                      <span>{venue.location}</span>
+                    </div>
+                    <a 
+                      href={venue.mapLocationUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="uvv-location__link"
+                    >
+                      View on Google Maps →
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="uvv-features">
               <h2 className="uvv-features__title">Features & Amenities</h2>
               <div className="uvv-features__grid">

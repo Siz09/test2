@@ -180,6 +180,46 @@ const VenueBooking = () => {
     return `${displayHour}:${minutes} ${ampm}`
   }
 
+  // Helper function to extract coordinates from Google Maps URL
+  const extractCoordinatesFromUrl = (mapUrl) => {
+    if (!mapUrl) return null;
+    
+    // Try to extract coordinates from various Google Maps URL formats
+    const patterns = [
+      /@(-?\d+\.?\d*),(-?\d+\.?\d*)/, // @lat,lng format
+      /q=(-?\d+\.?\d*),(-?\d+\.?\d*)/, // q=lat,lng format
+      /ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/, // ll=lat,lng format
+      /!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/, // 3d/4d format
+    ];
+    
+    for (const pattern of patterns) {
+      const match = mapUrl.match(pattern);
+      if (match) {
+        return {
+          lat: parseFloat(match[1]),
+          lng: parseFloat(match[2])
+        };
+      }
+    }
+    
+    return null;
+  };
+
+  // Generate Google Maps embed URL
+  const getMapEmbedUrl = (mapUrl, venueName, location) => {
+    if (!mapUrl) return null;
+    
+    const coordinates = extractCoordinatesFromUrl(mapUrl);
+    
+    if (coordinates) {
+      // Use coordinates for embed
+      return `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qcqn0Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8&q=${coordinates.lat},${coordinates.lng}&zoom=15`;
+    } else {
+      // Fallback to search by venue name and location
+      const query = encodeURIComponent(`${venueName} ${location}`);
+      return `https://www.google.com/maps/embed/v1/search?key=AIzaSyBFw0Qcqn0Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8Q8&q=${query}`;
+    }
+  };
   const pricing = calculatePricing()
 
   // Render different steps
@@ -521,6 +561,36 @@ const VenueBooking = () => {
                   </ul>
                 </div>
               </div>
+              
+              {/* Location Map Section */}
+              {venueDetails?.mapLocationUrl && (
+                <div className="venue-location-section">
+                  <h4 className="venue-section-heading">Location Map</h4>
+                  <div className="venue-map-container">
+                    <iframe
+                      src={getMapEmbedUrl(venueDetails.mapLocationUrl, venueDetails.venueName, venueDetails.location)}
+                      width="100%"
+                      height="250"
+                      style={{ border: 0, borderRadius: '8px' }}
+                      allowFullScreen=""
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title={`Map showing location of ${venueDetails.venueName}`}
+                    ></iframe>
+                  </div>
+                  <div className="venue-location-actions">
+                    <a 
+                      href={venueDetails.mapLocationUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="venue-location-link"
+                    >
+                      📍 View on Google Maps
+                    </a>
+                  </div>
+                </div>
+              )}
+              
             </div>
           </div>
           {/* Booking Form/Review */}
